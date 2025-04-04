@@ -1,0 +1,407 @@
+% Template for Part III essays 2024/25 (12.02.2025)
+% Authors: Mycroft Rosca-Mead, Matt Colbrook, Jonathan Evans.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The following few lines are preliminaries and MUST NOT BE EDITED
+\documentclass[11pt, titlepage]{article} % DO NOT CHANGE THE FONT SIZE
+\usepackage[left=2.2cm,right=2.2cm,top=2.5cm,bottom=2.5cm]{geometry} % DO NOT CHANGE THE MARGINS
+\usepackage{amsfonts,amssymb,amsthm,amsmath,amscd}
+\usepackage{enumerate}
+\usepackage{tikz}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ESSAY TITLE
+% Your essay title should match the title given in the essay booklet.
+% If you wish to give the essay your own subtitle, you can do this after the title page (e.g. using \section*{Subtitle Name}).
+% You do not need to use \Author and YOU SHOULD NOT INCLUDE YOUR NAME OR COLLEGE ANYWHERE IN THIS ESSAY.
+% The title page does not count towards the total page number.
+\title{New Advances in Conformal Prediction}
+
+% DATE
+%To remove the date from the front page of the final version, UNCOMMENT the line below.
+%\date{}
+
+% FONTS
+%\renewcommand{\familydefault}{\sfdefault}
+% YOU MUST USE EITHER THE SANS-SERIF FONT DEFINED BY THE COMMAND ABOVE OR THE STANDARD LaTeX (computer modern) FONT THAT CAN BE OBTAINED BY COMMENTING OUT THE LINE ABOVE. YOU MUST NOT USE ANY OTHER FONT.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A guide to using LaTeX can be found online at https://www.overleaf.com/learn/latex/Learn_LaTeX_in_30_minutes.
+% A shorter LaTeX cheat sheet can be found at https://wch.github.io/latexsheet/.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Some latex tips:
+
+% Use this space for any special macros or packages you need.
+\usepackage{graphicx}
+\usepackage[backend=biber, sorting=none, style=alphabetic]{biblatex}
+\addbibresource{refs.bib}
+
+\usepackage{bbm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\newcommand{\R}{\mathrm}
+\newcommand{\B}{\mathbf}
+\newcommand{\Prob}[1]{\mathbb{P}\left( #1 \right)}
+\newcommand{\Exp}[3]{\mathbb{E}\left#2 #1 \right#3}
+\newcommand{\Ind}[1]{\mathbbm{1}\left\{ #1 \right\}}
+
+\usepackage{hyperref}
+\usepackage{mathtools}
+% use this package for easy referencing:
+\usepackage[capitalise,noabbrev]{cleveref} % e.g., \cref{amazing_theorem} will reference "`Theorem"' X without having to keep track of theorems, equations etc and typing "`Theorem"'
+\usepackage{overpic} % use this package for easy labelling of figures
+\usepackage{url} % use this package to reference urls, e.g., \url{https://www.maths.cam.ac.uk/postgrad/part-iii/prospective.html}
+\usepackage{comment} % use this package to comment things out \begin{comment} blah \end{comment}
+
+% FIGURES
+% Here is an example of how to do figures:
+
+%\begin{figure}
+%\centering
+%\includegraphics[width=\linewidth]{CMS at night_0.jpg}
+%\caption{The CMS at night.}\label{fig:cms}
+%\end{figure}
+
+% General tip: Many tex problems can be easily solved by a quick and specific google search.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%FOOTNOTES
+\newcommand\blfootnote[1]{% avoids footnotes spilling over
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The following relate to equations, theorems, etc, as illustarted in the document. 
+
+\numberwithin{equation}{section}
+% EQUATION NUMBERING: The command above can be changed to number equations within subsections, rather than sections, or it can be commented out to number equations through the document, irrespective of (sub)sections.
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+
+\numberwithin{theorem}{section}
+\numberwithin{lemma}{section}
+\numberwithin{corollary}{section}
+\numberwithin{proposition}{section}
+\numberwithin{definition}{section}
+\numberwithin{remark}{section}
+% NUMBERING OF THEOREMS ETC: The commands above can be changed to number within subsections, rather than sections, or commented out to number them through the document, irrespective of (sub)sections.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% START WRITING YOUR ESSAY HERE
+
+\section{Introduction}
+\subsection{Notation}
+
+
+
+
+
+\label{sec:intro}
+
+\section{Foundations of Conformal Prediction}
+\label{sec:foundations_of_CP}
+
+The primary appeal of conformal prediction, as originally developed by Vovk et. al. \cite{vovk2005algorithmic}, lies in the fact that the coverage guarantee holds in a distribution-free sense and in finite samples. Compare this to the construction of prediction sets in classical statistics, which often relies on strong distributional assumptions (such as normality) and may only hold asymptotically. \vskip 5pt
+
+\noindent
+In this chapter, we develop the mathematical foundations of conformal prediction. We begin by defining the key concepts of quantiles, empirical cumulative distribution functions and exchangeability in \cref{subsec:quantiles_and_exchangeability}. In sections \cref{subsec:fullconformal} and \cref{subsec:splitconformal}, we present the two main variants of conformal prediction: full conformal prediction and split conformal prediction, respectively, and prove their coverage guarantees. In \cref{subsec:conformityscore}, we consider specific instances of conformal prediction and compare these through numerical experiments.
+
+\subsection{Quantiles and exchangeability}
+\label{subsec:quantiles_and_exchangeability}
+
+In the following definitions, we introduce the notions of quantiles, empirical cumulative distribution functions and exchangeability, which are fundamental to conformal prediction. The results in this subsection are stated as facts in \cite{angelopoulos2024theoreticalfoundationsconformalprediction}, and we provide our own proofs for these. The proof of \cref{lemma:exch_cdfquantile} is inspired by the proof of Theorem 1 in \cite{barber2023conformalbeyondexch}.
+
+\begin{definition}[Exchangeability]
+    The random variables \(Z_1, ..., Z_n\) are exchangeable if for all \(\sigma \in S_n\), we have that \[(Z_1, \ldots, Z_n) \overset{d}{=} (Z_{\sigma(1)}, \ldots, Z_{\sigma(n)}).\] Equivalently, \(Z_1, ..., Z_n\) are exchangeable if for any measurable set \(A\) and for any \(\sigma \in S_n\), we have that \[\Prob{(X_1, \ldots, X_n) \in A} = \Prob{(X_{\sigma(1)}, \ldots, X_{\sigma(n)}}) \in A.\]
+\label{defn:exch}
+\end{definition}
+
+\begin{remark}
+Note that if \(Z_1, \ldots, Z_n\) are exchangeable random variables taking values in \(\mathcal{Z}\), then they must be identically distributed. Indeed, for any measurable set \(A \in \mathcal{Z}\) and \(i \in [n]\), we have that \begin{align*} 
+    \Prob{Z_i \in A} &= \Prob{(Z_1, \ldots, Z_{i-1}, Z_i, Z_{i+1} \ldots, Z_n) \in \mathcal{Z} \times \cdots \times \mathcal{Z} \times A \times \mathcal{Z} \times \ldots \times \mathcal{Z}} \\
+    &= \Prob{(Z_i, \ldots, Z_{i-1}, Z_1, Z_{i+1} \ldots, Z_n) \in \mathcal{Z} \times \cdots \times \mathcal{Z} \times A \times \mathcal{Z} \times \ldots \times \mathcal{Z}} \\
+    &= \Prob{Z_1 \in A},
+\end{align*} where we use exchangeability to obtain the second equality. However, exchangeable random variables need not be independent. Indeed, if \(Z_1, \ldots, Z_n\) are sampled without replacement from the set \([n]\), then they are exchangeable, since any particular realisation has probability \(\frac{1}{n!}\), but \(Z_1, \ldots, Z_n\) are certainly not independent. Therefore, we see that exchangeability is a weaker condition that being i.i.d.
+\label{rmk:exch_dist}
+\end{remark}
+
+\begin{remark}
+    Another way to view exchangeability is as follows. Suppose the random variables \(Z_1, \ldots, Z_n \in \mathbb{R}\) are almost surely distinct and exchangeable. Taking \(A = \{(z_1, \ldots, z_n) \in \mathbb{R}^n : z_1 < z_2 < \cdots < z_n \}\), we have that for any \(\sigma \in S_n\), \[\Prob{Z_1 < \cdots < Z_n} = \Prob{(Z_1, \ldots, Z_n) \in A} = \Prob{(Z_{\sigma(1)}, \ldots, Z_{\sigma(n)}) \in A} = \Prob{Z_{\sigma(1)} < \cdots < Z_{\sigma(n)}}.\] This means that \(Z_1, \ldots, Z_n\) are equally likely to appear in any given ordering.
+\label{rmk:exch_ordering}
+\end{remark}
+
+\begin{definition}
+    Let \(P\) be a probability distribution on \(\mathbb{R}\) with cumulative distribution function \(F\). The \textit{quantile function} of \(P\) is defined for \(\beta \in (0,1)\) by \[Q(P;\beta) \coloneqq \inf\left\{ z \in \mathbb{R}: F(z) \geq \beta \right\}.\] We may also use the notation \(Q(F;\beta)\) in place of \(Q(P;\beta)\).
+\label{defn:prob_quantile}
+\end{definition}
+
+\begin{definition}
+    For \(z \in \mathbb{R}^n\), we define the following quantities. \begin{enumerate}[(i)] \itemsep0em
+        \item The \textit{empirical cumulative distribution function} of \(z\) is the function \(F_z: \mathbb{R} \to [0,1]\) given by \[\hat{F}_z(x) \coloneqq \frac{1}{n}\sum_{i=1}^n \Ind{z_i \leq x}.  \] Equivalently, \(\hat{F}_z\) is the cumulative distribution function of the probability distribution \[\frac{1}{n} \sum_{i=1}^n \delta_{z_i},\] where \(\delta_{a}\) denotes the Dirac measure at \(a\), for any \(a \in \mathbb{R}\).
+        \item The \textit{quantile function} of \(z\) is defined for \(\beta \in (0,1)\) by \[\hat{Q}_z(\beta) \coloneqq \inf \left\{ x \in \mathbb{R}: \hat{F}_z(x) \geq \beta \right\}.\] Equivalently, \[\hat{Q}_z(\beta) \coloneqq Q\left( \frac{1}{n}\sum_{i=1}^n \delta_{z_i} ; \, \beta \right).\]
+    \end{enumerate}
+\label{defn:empirical_cdfquantile}
+\end{definition}
+
+\noindent
+The following lemma formalises a sense in which the empirical cumulative distribution and quantile functions are inverses of each other.
+
+\begin{lemma}
+    Let \(z \in \mathbb{R}^n\) and \(\beta \in (0,1)\). Then we have that \(\hat{F}_z\left(\hat{Q}_z(\beta)\right) \geq \beta\). If, moreover, the components of \(z\) are distinct, then \(\hat{F}_z\left(\hat{Q}_z(\beta)\right) = \frac{\lceil{n\beta}\rceil}{n}.\)
+\label{lemma:cdfquantile}
+\end{lemma}
+\begin{proof}
+    The first claim follows from the definitions upon noting that \(\hat{F}_z\) is right-continuous. For the second claim, we observe that for all \(x \in \mathbb{R}\), we have that \(\hat{F}_z(x) \in \left\{0, \frac{1}{n}, \ldots, \frac{n-1}{n}, 1\right\}\). Since the components of \(z = (z_1, \ldots, z_n)\) are distinct, \(\hat{F}_z\) jumps by \(\frac{1}{n}\) at each \(z_i\), for \(i \in [n]\). Therefore \[\hat{F}_z\left(\hat{Q}_z(\beta)\right) = \frac{1}{n} \inf \{k \in \{0\} \cup [n]: \ k/n \geq \beta \} = \frac{\lceil{\beta n}\rceil}{n}.\]
+\end{proof}
+
+\noindent
+We now prove a lemma which is fundamental in the proof of the coverage guarantee in section \cref{subsec:fullconformal} and links all three of the concepts introduced above.
+
+\begin{lemma}
+    If the random variables \(Z_1, \ldots, Z_n\) are exchangeable, then for any \(i \in [n]\) and \(\beta \in (0,1)\), we have \[\Prob{Z_i \leq \hat{Q}_Z (\beta)} \geq \beta,\] where \(Z \coloneqq (Z_1, \ldots, Z_n)\). If, moreover, \(Z_1, \ldots, Z_n\) are almost surely distinct, then \[\Prob{Z_i \leq \hat{Q}_Z(\beta)} = \frac{\lceil{\beta n}\rceil}{n}.\]
+\label{lemma:exch_cdfquantile}
+\end{lemma}
+\begin{proof}
+    Fix \(\beta \in (0,1)\). We first claim that the exchangeability of \(Z_1, \ldots, Z_n\) implies that \[\Prob{Z_j \leq \hat{Q}_Z(\beta)} = \Prob{Z_1 \leq \hat{Q}_Z(\beta)}, \] for any \(j \in [n]\). Fix \(j \in [n]\) and define \(S_\beta = \left\{ y \in \mathbb{R}^n : \ y_j \leq \hat{Q}_y(\beta) \right\}.\) Define \(\tau \in S_n\) to be the transposition exchanging \(1\) and \(j\). We have that  
+    \begin{align*}
+        \Prob{Z_j \leq \hat{Q}_Z(\beta)} &= \Prob{(Z_1, \ldots, Z_n) \in S_\beta} \\
+        &= \Prob{(Z_{\tau(1)}, \ldots, Z_{\tau(n)}) \in S_\beta} \\
+        &= \Prob{Z_1 \leq \hat{Q}_Z(\beta)},
+    \end{align*} where the second equality follows from exchangeability. This proves our claim. \vskip 5pt
+    
+    \noindent
+    To complete the proof, we use the deterministic result from \cref{lemma:cdfquantile}. By the claim shown above, we have that \begin{align*}
+        \Prob{Z_i \leq \hat{Q}_Z(\beta)} = \frac{1}{n} \sum_{j=1}^n \Prob{Z_j \leq \hat{Q}_Z(\beta)} = \mathbb{E} \left[ \frac{1}{n} \sum_{j=1}^n \Ind{Z_j \leq \hat{Q}_Z(\beta)} \right]
+        = \Exp{\hat{F}_Z(\hat{Q}_Z(\beta))}{[}{]}.
+    \end{align*} By \cref{lemma:cdfquantile}, we have that \(\hat{F}_Z(\hat{Q}_Z(\beta)) \geq \beta\). Moreover, if \(Z_1, \ldots, Z_n\) are almost surely distinct, then \(\hat{F}_Z(\hat{Q}_Z(\beta)) = \frac{\lceil{\beta n}\rceil}{n}\) almost surely. This proves the lemma.
+\end{proof}
+
+\begin{remark}
+    In the case where \(Z_1, \ldots, Z_n\) are almost surely distinct, we can obtain the above result using an even simpler argument. Fix \(i \in [n]\). As discussed in \cref{rmk:exch_ordering}, each of the \(n!\) orderings of \(Z = (Z_1, \ldots, Z_n)\) are equally likely. For any \(k \in [n]\), Since there are \((n-1)!\) orderings where \(Z_i\) is the \(k^\mathrm{th}\) smallest element of \(Z\), we deduce that the probability that \(Z_i\) is the \(k^\mathrm{th}\) smallest element of \(Z\) is \(1/n\). Summing over \(k\) ranging from \(1\) to \(\lceil \beta n \rceil\) gives that \[\Prob{Z_i \leq \hat{Q}_Z(\beta)} = \frac{\lceil{\beta n}\rceil}{n}.\]
+\label{rmk:exch_rank_argument}
+\end{remark}
+
+
+\subsection{Full conformal prediction}
+\label{subsec:fullconformal}
+
+In this subsection, we present the full conformal prediction algorithm and prove its coverage guarantee. The presentation of the material in this subsection and the proof of \cref{thm:fullconformal_coverage} is inspired by \cite{angelopoulos2024theoreticalfoundationsconformalprediction}. \vskip5pt
+
+\noindent
+We first introduce the notion of a \textit{conformity score}. A conformity score is a function \[s:\mathcal{Z} \times \cup_{j \geq 1} \mathcal{Z}^j \to \mathbb{R}.\]
+
+\begin{remark}
+    Whilst the conformity score may theoretically be an arbitary function - as in the above display - we now explain how the conformity score should be understood in practice. The first argument of the conformity score represents an arbitary test point and the second argument a training dataset. The conformity score measures the discrepancy between the test point and a model fitted using the training dataset, where a high conformity score indicates that the test point "conforms" poorly with the fitted model. In particular, we note that computing the conformity score involves fitting a model using the data in the second argument. Following this intuition, we will also refer to a value of \(s\) given by \(s(z;D)\) as the conformity score of the test point \(z\) with respect to the data \(D\).
+\label{rmk:conformity_score_intuition}
+\end{remark}
+
+\begin{example}
+\label{example:absolute_residual_score}
+    Consider the regression setting where \(\mathcal{X} = \mathbb{R}^p\) and \(\mathcal{Y} = \mathbb{R}\) for some positive integer \(p\). Suppose \((X_1, Y_1), \ldots, (X_n, Y_n) \in \mathcal{Z}\) and each \((X_i, Y_i) \sim P\) for \(i \in [n]\). Suppose \((X,Y) \sim P\) is independent of \(((X_i, Y_i))_{i=1}^n\) and \(\hat{\mu}: \mathcal{X} \to \mathcal{Y}\) is an estimate of the regression function \(x \mapsto \Exp{Y|X = x}{(}{)}\) based on \(((X_i, Y_i))_{i=1}^n\). \vskip5pt
+
+    \noindent
+    An important example of a conformity score in this case is the \textit{absolute residual score} given by \[s\left(\left(x,y); ((X_1, Y_1), \ldots, (X_n, Y_n)\right)\right) = |y - \hat{\mu}(x)|.\]
+\end{example} \textcolor{red}{Example in classification setting?}
+\textcolor{red}{Words before definition below.} 
+
+\noindent
+We now introduce the notion of a symmetric conformity score, which is one that does not depend on the order in which the training data points are provided.
+
+\begin{definition}
+    A conformity score \(s\) is \textit{symmetric} if for any \(z \in \mathcal{Z}\), \(D \in \cup_{j \geq 1} \mathcal{Z}^j\) and \(j \in \mathbb{N}\), we have that \[s(z; D) = s(z; \sigma(D)).\]
+\label{defn:symmetric_conformityscore}
+\end{definition}
+
+\noindent
+We now give a brief informal description of how the coverage guarantee is obtained. We will consider the conformity score of each \((X_i, Y_i)\) with respect to \(((X_i, Y_i))_{i=1}^{n+1}\). We will show that if \(s\) is symmetric, then these conformity scores are exchangeable. As discussed in \cref{rmk:exch_ordering} and \cref{rmk:exch_rank_argument}, this means that any ordering of the conformity scores is equally likely, so the probability that the conformity score of the test point \((X_{n+1}, Y_{n+1})\) lies in the bottom \(1-\alpha\) fraction of all the conformity scores is at least \(1-\alpha\). This is the primary idea used to construct the prediction set. However, since \(Y_{n+1}\) is unknown, will instead consider the test point \((X_{n+1}, y)\) and select those \(y \in \mathcal{Y}\) to be included the prediction set, whose conformity score falls in the bottom \(1-\alpha\) fraction. \vskip5pt
+
+\noindent
+Before formally proving the coverage guarantee, we introduce the notation for the quantities mentioned in the outline above. Write \[D = ((X_i, Y_i))_{i=1}^{n+1}, \quad \text{and} \quad D^{y} = ((X_1, Y_1), \ldots, (X_n, Y_n), (X_{n+1}, y)), \] for any \(y \in \mathcal{Y}\).  Write \[S_i = s((X_i, Y_i); D), \ \ S_i^y = s((X_i, Y_i); D^y), \] and \[S_{n+1}^y = s((X_{n+1}, y); D^y).\]
+
+\begin{theorem}
+    Suppose \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) are exchangeable and \(s\) is a symmetric conformity score. Define the prediction set \begin{equation}
+        C(X_{n+1}) = \left\{ y \in \mathcal{Y}: \ \ S_{n+1}^y \leq \hat{Q}_{S^y}(1-\alpha) \right\}.
+    \label{eqn:fullconformal_prediction_set}
+    \end{equation} Then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha.\] If, moreover, the scores \(S_1, \ldots, S_{n+1}\) are almost surely distinct, then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \leq 1-\alpha + \frac{1}{n+1}.\]
+
+\label{thm:fullconformal_coverage}  
+\end{theorem}
+
+\begin{proof}
+    We begin by showing that \(S \coloneqq (S_1, \ldots, S_{n+1})\) is exchangeable, as mentioned in the discussion above. \vskip5pt
+    
+    \noindent
+    Making the dependence on \(D\) explicit, note that \(S_i = s((X_i, Y_i); D)\) and \(S_{\sigma(i)} = s((X_{\sigma(i)}, Y_{\sigma(i)}); D)\) for any \(i \in [n+1]\) and \(\sigma \in S_{n+1} \). Define also the function \(h: \mathcal{Z}^{n+1} \to \mathbb{R}^{n+1}\) by \[h:z \mapsto (s(z_1;z), \ldots, s(z_{n+1};z)),\] for any \(z = (z_1, \ldots, z_n) \in \mathcal{Z}^n\). Then we have that for any measurable set \(A\), 
+    \begin{align*}
+        \Prob{\left(S_{\sigma(1)}, \ldots, S_{\sigma(n+1)}\right) \in A} &= \Prob{\left( s((X_{\sigma(1)}, Y_{\sigma(1)}); D), \ldots, s((X_{\sigma(n+1)}, Y_{\sigma(n+1)}); D)  \right) \in A} \\
+        &= \Prob{\left( s((X_{\sigma(1)}, Y_{\sigma(1)}); \sigma(D)), \ldots, s((X_{\sigma(n+1)}, Y_{\sigma(n+1)}); \sigma(D))  \right) \in A} \\
+        &= \Prob{ h(Z_{\sigma(1)}, \ldots, Z_{\sigma(n+1)}) \in A},
+    \end{align*} where the second equality follows from the symmetry of the score function. By the exchangeability of \((Z_1, \ldots, Z_n)\), we have that \begin{align*}
+        \Prob{ h(Z_{\sigma(1)}, \ldots, Z_{\sigma(n+1)}) \in A} &= \Prob{ (Z_{\sigma(1)}, \ldots, Z_{\sigma(n+1)}) \in h^{-1}(A)} \\
+        &= \Prob{ (Z_{1}, \ldots, Z_{n+1}) \in h^{-1}(A)} \\
+        &= \Prob{ h(Z_{1}, \ldots, Z_{n+1}) \in A} \\
+        &= \Prob{(S_1, \ldots, S_{n+1}) \in A}, 
+    \end{align*} which shows that \[\Prob{\left(S_{\sigma(1)}, \ldots, S_{\sigma(n+1)}\right) \in A} = \Prob{(S_1, \ldots, S_{n+1}) \in A}, \] so \(S\) is exchangeable. \vskip5pt
+
+    \noindent
+    Finally, note that \[Y_{n+1} \in C(X_{n+1}) \iff S_{n+1} \leq \hat{Q}_S(1-\alpha)\] by the definition of \(C(X_{n+1})\). Therefore, \cref{lemma:exch_cdfquantile} implies that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha, \] and that if \(S_1, \ldots, S_{n+1}\) are almost surely distinct, then \[\Prob{Y_{n+1} \in C(X_{n+1})} \leq 1-\alpha + \frac{1}{n+1}.\]
+\end{proof}
+
+\noindent
+We now derive an equivalent characterisation of the prediction set that we will use in the remainder of this essay and that will be particularly useful in the next subsection. In order to do this, we first present a lemma.
+
+\begin{lemma}
+    For any \(z \in \mathbb{R}^n\) and \(\beta \in (0,1)\), we have that \[y \leq \hat{Q}_{(z,y)} (\beta) \iff y \leq \hat{Q}_z\left( \frac{\lceil (n+1)\beta \rceil }{n} \right)\]
+\label{lemma:quantile_lemma}
+\end{lemma}
+
+\begin{proof}
+    First note that by \cref{defn:empirical_cdfquantile}, we have that \[\hat{F}_{(z,y)} (x) = \frac{1}{n+1} \left( \sum_{i=1}^n \Ind{z_i \leq x} + \Ind{y \leq x} \right) = \frac{n}{n+1} \hat{F}_z(x) + \frac{1}{n+1}\Ind{y \leq x}.\] Therefore, we have that \[\hat{F}_{(z,y)}\left(  \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \hat{F}_z \left( \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \frac{\beta(n+1)}{n} \geq \beta \] by \cref{lemma:cdfquantile}. We deduce that \[\hat{Q}_{(z,y)}(\beta) \leq \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right), \] which shows the forward direction of the result. Now suppose \(y > \hat{Q}_{(z,y)}(\beta) \), then \begin{align*}
+        \hat{F}_z(\hat{Q}_z(\beta)) &= \frac{n+1}{n} \hat{F}_{(z,y)}(\hat{Q}_z(\beta)) - \frac{1}{n} \Ind{y \leq \hat{Q}_{(z,y)}(\beta)} \\
+        &= \frac{n+1}{n} \hat{F}_{(z,y)} (\hat{Q}_{(z,y)} (\beta) ) \\
+        &= \frac{n+1}{n} \hat{F}_{(z,y)} \left(  \hat{Q}_{(z,y)} \left( \frac{\lceil \beta (n+1) \rceil }{n+1} \right) \right) \\
+        &\geq \frac{\lceil \beta (n+1) \rceil }{n}, 
+    \end{align*} where the final inequality follows from \cref{lemma:cdfquantile}.
+\end{proof}
+
+\noindent The following reformulation of \cref{thm:fullconformal_coverage} is an immediate consequence of \cref{lemma:quantile_lemma}.
+
+\begin{theorem}
+    Suppose \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) are exchangeable and \(s\) is a symmetric conformity score.. Define the prediction set \begin{equation}
+        C(X_{n+1}) = \left\{ y \in \mathcal{Y}: \ \ S_{n+1}^y \leq \hat{Q}_{(S_1^y, \ldots, S_n^y)} \left(\frac{\lceil (1-\alpha)(n+1) \rceil}{n}\right) \right\}.
+    \label{eqn:fullconformal_prediction_set_v2}
+    \end{equation} Then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha.\] If, moreover, the scores \(S_1, \ldots, S_{n+1}\) are almost surely distinct, then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \leq 1-\alpha + \frac{1}{n+1}.\]
+
+\label{thm:fullconformal_coverage_v2}  
+\end{theorem}
+
+
+
+\begin{algorithm}[H]
+\caption{Full conformal prediction algorithm}
+\label{alg:fullconformal}
+\begin{algorithmic}
+    \Require Data \(((X_i, Y_i))_{i=1}^n\); test predictor \(X_{n+1}\); miscoverage level \(\alpha \in (0,1)\), conformity score \(s\).
+    \State Initialise \(C \gets \emptyset\)
+    \For{\(y \in \mathcal{Y}\)}
+        \State Compute \(S_i^y = s((X_i, Y_i); D^y)\).
+        \State Compute \(S_{n+1}^y = s((X_{n+1}, y); D^y)\).
+        \State Set \(S^y = (S_1^y, \ldots, S_{n}^y)\).
+        \State Compute \(\hat{Q}_{S^y}(1-\alpha)\) as the \(\lceil (1-\alpha)(n+1) \rceil \) smallest of \(S_1^y, \ldots, S_{n}^y\).
+        \If{\(S_{n+1}^y \leq \hat{Q}_{S^y}(1-\alpha)\)}
+            \State \(C \gets C \cup \{y\} \).
+        \EndIf
+    \EndFor
+    \Ensure \(C\)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{remark}
+    \textcolor{red}{Something about the prediction set above not being obviously computable. Can do in specific cases (need references) but may not be possible in general. In above algo, if \(\mathcal{Y}\) is not discrete, problematic, need to discretise. Also, the form of the prediction set not at all obvious Split conformal resolves some of this... (e.g. below we will see we can get interval). Dependence of the form of the prediction set on the conformity score also not obvious.}
+\end{remark}
+
+\subsection{Split conformal prediction}
+\label{subsec:splitconformal}
+
+In this subsection, we will present the split conformal prediction algorithm. We will show that it is, in fact, a special case of full conformal prediction, and so the coverage guarantee from \cref{subsec:fullconformal} also holds for split conformal prediction. We will also compare full and split conformal prediction, discussing the advantages and disadvantages of one over the other.\vskip5pt
+
+\noindent
+For split conformal prediction, we assume that we are given a function \(\hat{s}:\mathcal{X} \times \mathcal{Y} \to \mathbb{R}\) that depends on a \textit{proper training set} \(D_\mathrm{tr} \in \cup_{j \geq 1} \mathcal{Z}^j \) that is disjoint from the calibration data \(D_\mathrm{cal} \coloneqq ((X_i, Y_i))_{i=1}^n\).  Split conformal prediction then uses the calibration data together with \(\hat{s}\) and \(X_{n+1}\), to form a prediction set for \(Y_{n+1}\). \vskip5pt
+
+\noindent
+Before proving the coverage guarantee for split conformal prediction, we introduce the necessary notation. Let \(\hat{S}_i = \hat{s}(X_i, Y_i)\) for \(i \in [n]\) and let \(\hat{S} = (\hat{S}_1, \ldots, \hat{S}_n)\).
+
+\begin{theorem}
+    Suppose \((X_1, Y_1), \ldots, (X_n, Y_n) \in \mathcal{Z}\) are exchangeable. Define the prediction set \begin{equation}
+        C(X_{n+1}) = \left\{ y \in \mathcal{Y} : \hat{s}(X_{n+1}, y) \leq \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right) \right\}.
+    \label{eqn:splitconformal_prediction_set}
+    \end{equation} Then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha.\] If, moreover, the scores \(\hat{S}_1, \ldots, \hat{S}_{n+1}\) are almost surely distinct, then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \leq 1-\alpha + \frac{1}{n+1}.\]
+\label{thm:splitconformal_coverage}
+\end{theorem}
+\begin{proof}
+    We work conditional on \(D_\mathrm{tr}\), so we may treat \(\hat{s}\) as a non-random function. The key observation is that since \cref{thm:fullconformal_coverage_v2} holds for any symmetric conformity score, we may choose the conformity score to be independent of its second argument. Define the conformity score \(s(z; \tilde{D}) = \hat{s}(z)\) for all \(z \in \mathcal{Z}\) and \(\tilde{D} \in \cup_{j \geq 1} \mathcal{Z}^j\). Since this is independent of \(\tilde{D}\), it is certainly symmetric. In the notation of \cref{thm:fullconformal_coverage_v2}, we then have that \[S_i = S_i^y = \hat{S}_i \ \ \mathrm{and} \ \ S_{n+1}^y = \hat{s}(X_{n+1}, y),\] for all \(y \in \mathcal{Y}\). Therefore, the prediction set in \cref{thm:fullconformal_coverage_v2} takes exactly the form stated above, so we have that \[\Prob{Y_{n+1} \in C(X_{n+1}) | D_{\mathrm{tr}}  } \geq 1-\alpha.\] If \(\hat{S}_1, \ldots, \hat{S}_n\) are almost surely distinct, then \[\Prob{Y_{n+1} \in C(X_{n+1}) | D_{\mathrm{tr}}  } \leq 1-\alpha + \frac{1}{n+1}.\] The result follows by marginalising over \(D_\mathrm{tr}.\)
+\end{proof}
+
+\begin{algorithm}[H]
+\caption{Split conformal prediction algorithm}
+\label{alg:splitconformal}
+\begin{algorithmic}
+    \Require Calibration \(((X_i, Y_i))_{i=1}^n\); test predictor \(X_{n+1}\); miscoverage level \(\alpha \in (0,1)\), conformity score \(\hat{s}\).
+    \State Initialise \(C \gets \emptyset\)
+    \State Compute \(\hat{S}_i = \hat{s}(X_i,Y_i)\) for each \(i \in [n]\) and set \(\hat{S} = (\hat{S}_1, \ldots, \hat{S}_n).\)
+    \For{\(y \in \mathcal{Y}\)}
+        \State Compute \(\hat{s}(X_{n+1}, y)\).
+        \State Compute \(\hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right)\) as the \(\lceil (1-\alpha)(n+1) \rceil \) smallest of \(\hat{S}_1, \ldots, \hat{S}_n\).
+        \If{\(\hat{s}(X_{n+1}, y) \leq \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right)\)}
+            \State \(C \gets C \cup \{y\} \).
+        \EndIf
+    \EndFor
+    \Ensure \(C\)
+\end{algorithmic}
+\label{alg:split_conformal}
+\end{algorithm}
+
+\begin{remark}
+    Although \(D_\mathrm{tr}\) and \(\hat{s}\) can be arbitary for the coverage guarantee to hold, in practice, we usually split the full training set into a proper training set \(D_\mathrm{tr}\) and a calibration set \(D_\mathrm{cal}\). We fit a model on the proper training set to obtain a conformity score \(\hat{s}\), and then apply the split conformal prediction procedure given in \cref{alg:split_conformal} to the calibration data to obtain the prediction set.
+\end{remark}
+
+\begin{remark}
+    Note that the split conformal coverage guarantee imposes no restrictions on \(D_\mathrm{tr}\) and the fitting procedure used to obtain \(\hat{s}\), whereas full conformal prediction requires the conformity score to be symmetric. Moreover, split conformal prediction has the advantage that it is more computationally efficient than full conformal prediction. Indeed - as discussed in the above remark - in split conformal prediction, we must only fit the model once to obtain \(\hat{s}\) and compute the conformity scores on the calibration data. However, in full conformal prediction, we must refit the model for each \(y \in \mathcal{Y}\) since we compute the conformity score with respect to a dataset that includes the point \((X_{n+1}, y)\). On the other hand, full conformal prediction has the advantage that it uses all of the training data to fit the model, whereas in split conformal prediction, we may typically only use half of the full training set as the proper training set and the other half as the calibration set.
+\end{remark}
+
+\begin{example}
+Consider the regression setting as in \cref{example:absolute_residual_score}. Suppose \(\hat{\mu}\) is an estimate of the regression function obtained from the proper training set \(D_\mathrm{tr}\). In the case of split conformal prediction, we refer to the conformity score \[\hat{s}(x,y) = |y - \hat{\mu}(x)|\] as the \textit{absolute residual score}. Note that in this case the prediction set is an interval centered at \(\hat{\mu}(X_{n+1}) \) since \begin{align*}
+    C(X_{n+1}) &= \left\{y \in \mathbb{R}: \, |y - \hat{\mu}(X_{n+1}) | \leq \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right) \right\} \\
+    &= \left[ \hat{\mu}(X_{n+1}) - \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right), \ \hat{\mu}(X_{n+1}) + \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right) \right].
+\end{align*}
+\noindent
+It is important to note that this simplified form of the prediction set is a consequence of \cref{lemma:quantile_lemma} and split conformal prediction procedure. Specifically, this form of the prediction set arises from the fact that neither the estimated regression function, nor the quantile used in the definition of the prediction set depend on \(y\). The former is a consequence of the split conformal prediction procedure, which ensures \(\hat{\mu}\) only depends on the proper training set \(D_\mathrm{tr}\). The latter is a consequence of both the split conformal algorithm, which ensures \(S_i^y = \hat{s}(X_i, Y_i)\) is independent of \(y\) (as in the proof of \cref{thm:splitconformal_coverage}), and \cref{lemma:quantile_lemma}, which ensures the quantile used in the prediction set depends only on \(D_\mathrm{cal}\).
+
+\end{example}
+
+
+\subsection{Choice of conformity score}
+\label{subsec:conformityscore}
+
+%This is how you can start a new page
+\vfill \eject
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                             
+% REFERENCES
+%                                                                             
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% List any references you have used below. You can list papers in your preferred style, e.g. as below.
+% To cite a paper in your text, use \cite{}.
+
+\nocite{*}
+\printbibliography
+
+% If you prefer, you can list your papers in a separate .bib file. This is often much more efficient and easier to change later.
+% An explanation of how to do this can be found at https://www.overleaf.com/learn/latex/Bibliography_management_with_bibtex.
+% When submitting the essay, you must upload your .bib file alongside this .tex file.
+
+\end{document}
