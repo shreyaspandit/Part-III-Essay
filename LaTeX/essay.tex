@@ -42,6 +42,8 @@
 \usepackage{bbm}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{caption}
+\usepackage{subcaption}
 
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
@@ -131,7 +133,7 @@ In this chapter, we develop the mathematical foundations of conformal prediction
 \subsection{Quantiles and exchangeability}
 \label{subsec:quantiles_and_exchangeability}
 
-In the following definitions, we introduce the notions of quantiles, empirical cumulative distribution functions and exchangeability, which are fundamental to conformal prediction. The results in this subsection are stated as facts in \cite{angelopoulos2024theoreticalfoundationsconformalprediction}, and we provide our own proofs for these. The proof of \cref{lemma:exch_cdfquantile} is inspired by the proof of Theorem 1 in \cite{barber2023conformalbeyondexch}.
+In the following definitions, we introduce the notions of quantiles, empirical cumulative distribution functions and exchangeability, which are fundamental to conformal prediction. The results in this subsection are stated as facts in \cite{angelopoulos2024theoreticalfoundationsconformalprediction}, and we provide our own proofs for these. The proof of \cref{lemma:exch_cdfquantile} follows the proof of Lemma 1 in \cite{romano2019_CQR}.
 
 \begin{definition}[Exchangeability]
     The random variables \(Z_1, ..., Z_n\) are exchangeable if for all \(\sigma \in S_n\), we have that \[(Z_1, \ldots, Z_n) \overset{d}{=} (Z_{\sigma(1)}, \ldots, Z_{\sigma(n)}).\] Equivalently, \(Z_1, ..., Z_n\) are exchangeable if for any measurable set \(A\) and for any \(\sigma \in S_n\), we have that \[\Prob{(X_1, \ldots, X_n) \in A} = \Prob{(X_{\sigma(1)}, \ldots, X_{\sigma(n)}}) \in A.\]
@@ -159,11 +161,15 @@ Note that if \(Z_1, \ldots, Z_n\) are exchangeable random variables taking value
 
 \begin{definition}
     For \(z \in \mathbb{R}^n\), we define the following quantities. \begin{enumerate}[(i)] \itemsep0em
-        \item The \textit{empirical cumulative distribution function} of \(z\) is the function \(F_z: \mathbb{R} \to [0,1]\) given by \[\hat{F}_z(x) \coloneqq \frac{1}{n}\sum_{i=1}^n \Ind{z_i \leq x}.  \] Equivalently, \(\hat{F}_z\) is the cumulative distribution function of the probability distribution \[\frac{1}{n} \sum_{i=1}^n \delta_{z_i},\] where \(\delta_{a}\) denotes the Dirac measure at \(a\), for any \(a \in \mathbb{R}\).
-        \item The \textit{quantile function} of \(z\) is defined for \(\beta \in (0,1)\) by \[\hat{Q}_z(\beta) \coloneqq \inf \left\{ x \in \mathbb{R}: \hat{F}_z(x) \geq \beta \right\}.\] Equivalently, \[\hat{Q}_z(\beta) \coloneqq Q\left( \frac{1}{n}\sum_{i=1}^n \delta_{z_i} ; \, \beta \right).\]
+        \item The \textit{empirical cumulative distribution function} of \(z\) is the function \(F_z: (-\infty, \infty] \to [0,1]\) given for \(x \in (0, \infty)\) by \[\hat{F}_z(x) \coloneqq \frac{1}{n}\sum_{i=1}^n \Ind{z_i \leq x}.  \] We define \(\hat{F}_z(\infty) = 1\).
+        \item The \textit{quantile function} \(\hat{Q}_z:(0,1] \to (-\infty, \infty]\) of \(z\) is defined for \(\beta \in (0,1]\) by \[\hat{Q}_z(\beta) \coloneqq \inf \left\{ x \in (-\infty, \infty]: \hat{F}_z(x) \geq \beta \right\}.\]
     \end{enumerate}
 \label{defn:empirical_cdfquantile}
 \end{definition}
+
+\begin{remark}
+    Note that \(\hat{F}_z\) is the cumulative distribution function of the probability distribution \[\frac{1}{n} \sum_{i=1}^n \delta_{z_i},\] where \(\delta_{a}\) denotes the Dirac measure at \(a\), for any \(a \in \mathbb{R}\). We also have that \[\hat{Q}_z(\beta) = Q\left( \frac{1}{n}\sum_{i=1}^n \delta_{z_i} ; \, \beta \right),\] so \(\hat{Q}_z\) is the quantile function of the probability distribution \(\frac{1}{n} \sum_{i=1}^n \delta_{z_i}.\)
+\end{remark}
 
 \noindent
 The following lemma formalises a sense in which the empirical cumulative distribution and quantile functions are inverses of each other.
@@ -238,7 +244,7 @@ We now introduce the notion of a symmetric conformity score, which is one that d
 We now give a brief informal description of how the coverage guarantee is obtained. We will consider the conformity score of each \((X_i, Y_i)\) with respect to \(((X_i, Y_i))_{i=1}^{n+1}\). We will show that if \(s\) is symmetric, then these conformity scores are exchangeable. As discussed in \cref{rmk:exch_ordering} and \cref{rmk:exch_rank_argument}, this means that any ordering of the conformity scores is equally likely, so the probability that the conformity score of the test point \((X_{n+1}, Y_{n+1})\) lies in the bottom \(1-\alpha\) fraction of all the conformity scores is at least \(1-\alpha\). This is the primary idea used to construct the prediction set. However, since \(Y_{n+1}\) is unknown, will instead consider the test point \((X_{n+1}, y)\) and select those \(y \in \mathcal{Y}\) to be included the prediction set, whose conformity score falls in the bottom \(1-\alpha\) fraction. \vskip5pt
 
 \noindent
-Before formally proving the coverage guarantee, we introduce the notation for the quantities mentioned in the outline above. Write \[D = ((X_i, Y_i))_{i=1}^{n+1}, \quad \text{and} \quad D^{y} = ((X_1, Y_1), \ldots, (X_n, Y_n), (X_{n+1}, y)), \] for any \(y \in \mathcal{Y}\).  Write \[S_i = s((X_i, Y_i); D), \ \ S_i^y = s((X_i, Y_i); D^y), \] and \[S_{n+1}^y = s((X_{n+1}, y); D^y).\]
+Before formally proving the coverage guarantee, we introduce the notation for the quantities mentioned in the outline above. Write \[D = ((X_i, Y_i))_{i=1}^{n+1}, \quad \text{and} \quad D^{y} = ((X_1, Y_1), \ldots, (X_n, Y_n), (X_{n+1}, y)), \] for any \(y \in \mathcal{Y}\).  Write \[S_i = s((X_i, Y_i); D), \ \ S_i^y = s((X_i, Y_i); D^y), \] and \[S_{n+1}^y = s((X_{n+1}, y); D^y).\] Additionally, let \[S^y = (S_1^y, \ldots, S_n^y, S_{n+1}^y).\]
 
 \begin{theorem}
     Suppose \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) are exchangeable and \(s\) is a symmetric conformity score. Define the prediction set \begin{equation}
@@ -273,24 +279,37 @@ Before formally proving the coverage guarantee, we introduce the notation for th
 We now derive an equivalent characterisation of the prediction set that we will use in the remainder of this essay and that will be particularly useful in the next subsection. In order to do this, we first present a lemma.
 
 \begin{lemma}
-    For any \(z \in \mathbb{R}^n\) and \(\beta \in (0,1)\), we have that \[y \leq \hat{Q}_{(z,y)} (\beta) \iff y \leq \hat{Q}_z\left( \frac{\lceil (n+1)\beta \rceil }{n} \right)\]
+    For any \(z \in \mathbb{R}^n\), \(y \in \mathbb{R}\) and \(\beta \in (0,1]\), we have that \[y \leq \hat{Q}_{(z,y)} (\beta) \iff y \leq \begin{cases}
+        \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \quad &\R{if} \ \frac{\lceil \beta(n+1) \rceil}{n} \leq 1, \\
+        \infty \quad &\R{otherwise}.
+    \end{cases} \]
 \label{lemma:quantile_lemma}
 \end{lemma}
 
 \begin{proof}
-    First note that by \cref{defn:empirical_cdfquantile}, we have that \[\hat{F}_{(z,y)} (x) = \frac{1}{n+1} \left( \sum_{i=1}^n \Ind{z_i \leq x} + \Ind{y \leq x} \right) = \frac{n}{n+1} \hat{F}_z(x) + \frac{1}{n+1}\Ind{y \leq x}.\] Therefore, we have that \[\hat{F}_{(z,y)}\left(  \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \hat{F}_z \left( \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \frac{\beta(n+1)}{n} \geq \beta \] by \cref{lemma:cdfquantile}. We deduce that \[\hat{Q}_{(z,y)}(\beta) \leq \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right), \] which shows the forward direction of the result. Now suppose \(y > \hat{Q}_{(z,y)}(\beta) \), then \begin{align*}
-        \hat{F}_z(\hat{Q}_z(\beta)) &= \frac{n+1}{n} \hat{F}_{(z,y)}(\hat{Q}_z(\beta)) - \frac{1}{n} \Ind{y \leq \hat{Q}_{(z,y)}(\beta)} \\
-        &= \frac{n+1}{n} \hat{F}_{(z,y)} (\hat{Q}_{(z,y)} (\beta) ) \\
-        &= \frac{n+1}{n} \hat{F}_{(z,y)} \left(  \hat{Q}_{(z,y)} \left( \frac{\lceil \beta (n+1) \rceil }{n+1} \right) \right) \\
-        &\geq \frac{\lceil \beta (n+1) \rceil }{n}, 
-    \end{align*} where the final inequality follows from \cref{lemma:cdfquantile}.
+    First suppose that \(y \leq \hat{Q}_{(z,y)}(\beta)\). Note that by \cref{defn:empirical_cdfquantile}, we have that \[\hat{F}_{(z,y)} (x) = \frac{1}{n+1} \left( \sum_{i=1}^n \Ind{z_i \leq x} + \Ind{y \leq x} \right) = \frac{n}{n+1} \hat{F}_z(x) + \frac{1}{n+1}\Ind{y \leq x}.\] If \( \frac{\lceil \beta (n+1) \rceil}{n} \leq 1\), then it follows that \[\hat{F}_{(z,y)}\left(  \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \hat{F}_z \left( \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \frac{\beta(n+1)}{n} \geq \beta \] by \cref{lemma:cdfquantile}. We deduce that \begin{align}
+        \hat{Q}_{(z,y)}(\beta) \leq \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right).
+    \label{eqn:quantile_lemma_disp1}
+    \end{align} Clearly \(y \leq \infty\), so this proves the forward direction of the lemma. To prove the converse direction, first note that if \(y > \hat{Q}_{(z,y)}(\beta)\), then we have that \begin{align}
+        \hat{F}_z(\hat{Q}_{(z,y)}(\beta)) &= \frac{n+1}{n} \hat{F}_{(z,y)}(\hat{Q}_{(z,y)}(\beta)) - \frac{1}{n} \Ind{y \leq \hat{Q}_{(z,y)}(\beta)} \label{eqn:quantile_lemma_disp2}\\
+        &= \frac{n+1}{n} \hat{F}_{(z,y)} (\hat{Q}_{(z,y)} (\beta) ) \nonumber\\
+        &= \frac{n+1}{n} \hat{F}_{(z,y)} \left(  \hat{Q}_{(z,y)} \left( \frac{\lceil \beta (n+1) \rceil }{n+1} \right) \right) \nonumber\\
+        &\geq \frac{\lceil \beta (n+1) \rceil }{n} \nonumber, 
+    \end{align} where the final inequality follows from \cref{lemma:cdfquantile}. If \(\frac{\lceil \beta (n+1) \rceil}{n} \leq 1\), then this implies that \[y > \hat{Q}_{(z,y)}(\beta) \geq \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil}{n} \right), \] a contradiction, so \(y \leq \hat{Q}_{(z,y)}(\beta)\). If \(\frac{\lceil\beta  (n+1) \rceil}{n} > 1\), then it implies \(\hat{F}_z(\hat{Q}_{(z,y)}(\beta)) > 1\), a contradiction, so \(y \leq \hat{Q}_{(z,y)}(\beta).\)
 \end{proof}
+
+\begin{remark}
+    Note that for any \(z \in \mathbb{R}^n\) and \(\beta \in (0,1]\), \[\hat{Q}_{(z,\infty)} (\beta) = \begin{cases}
+        \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \quad &\R{if} \ \frac{\lceil \beta(n+1) \rceil}{n} \leq 1, \\
+        \infty \quad &\R{otherwise}.
+        \end{cases}\] This follows from \eqref{eqn:quantile_lemma_disp1} and \eqref{eqn:quantile_lemma_disp2} upon noting that \(\hat{Q}_{(z,\infty)}(\beta) < \infty\) if \(\beta \leq \frac{n}{n+1}\), which is equivalent to \(\frac{\lceil \beta (n+1) \rceil}{n} \leq 1\).
+\end{remark}
 
 \noindent The following reformulation of \cref{thm:fullconformal_coverage} is an immediate consequence of \cref{lemma:quantile_lemma}.
 
 \begin{theorem}
-    Suppose \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) are exchangeable and \(s\) is a symmetric conformity score.. Define the prediction set \begin{equation}
-        C(X_{n+1}) = \left\{ y \in \mathcal{Y}: \ \ S_{n+1}^y \leq \hat{Q}_{(S_1^y, \ldots, S_n^y)} \left(\frac{\lceil (1-\alpha)(n+1) \rceil}{n}\right) \right\}.
+    Suppose \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) are exchangeable and \(s\) is a symmetric conformity score. Define the prediction set \begin{equation}
+        C(X_{n+1}) = \left\{ y \in \mathcal{Y}: \ \ S_{n+1}^y \leq \hat{Q}_{(S_1^y, \ldots, S_n^y, \infty)}(1-\alpha)  \right\}.
     \label{eqn:fullconformal_prediction_set_v2}
     \end{equation} Then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha.\] If, moreover, the scores \(S_1, \ldots, S_{n+1}\) are almost surely distinct, then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \leq 1-\alpha + \frac{1}{n+1}.\]
 
@@ -305,15 +324,19 @@ We now derive an equivalent characterisation of the prediction set that we will 
 \begin{algorithmic}
     \Require Data \(((X_i, Y_i))_{i=1}^n\); test predictor \(X_{n+1}\); miscoverage level \(\alpha \in (0,1)\), conformity score \(s\).
     \State Initialise \(C \gets \emptyset\)
-    \For{\(y \in \mathcal{Y}\)}
-        \State Compute \(S_i^y = s((X_i, Y_i); D^y)\).
-        \State Compute \(S_{n+1}^y = s((X_{n+1}, y); D^y)\).
-        \State Set \(S^y = (S_1^y, \ldots, S_{n}^y)\).
-        \State Compute \(\hat{Q}_{S^y}(1-\alpha)\) as the \(\lceil (1-\alpha)(n+1) \rceil \) smallest of \(S_1^y, \ldots, S_{n}^y\).
-        \If{\(S_{n+1}^y \leq \hat{Q}_{S^y}(1-\alpha)\)}
-            \State \(C \gets C \cup \{y\} \).
-        \EndIf
-    \EndFor
+    \If{\(\lceil (1-\alpha)(n+1) \rceil > n\)}
+        \State \(C = \mathcal{Y}\)
+    \Else
+        \For{\(y \in \mathcal{Y}\)}
+            \State Compute \(S_i^y = s((X_i, Y_i); D^y)\).
+            \State Compute \(S_{n+1}^y = s((X_{n+1}, y); D^y)\).
+            \State Set \(S^y = (S_1^y, \ldots, S_{n}^y)\).
+            \State Compute \(\hat{Q}\) as the \(\lceil (1-\alpha)(n+1) \rceil \) element in the list \(S_1^y, \ldots, S_{n}^y\).
+            \If{\(S_{n+1}^y \leq \hat{Q}\)}
+                \State \(C \gets C \cup \{y\} \).
+            \EndIf      
+        \EndFor
+    \EndIf
     \Ensure \(C\)
 \end{algorithmic}
 \end{algorithm}
@@ -325,17 +348,17 @@ We now derive an equivalent characterisation of the prediction set that we will 
 \subsection{Split conformal prediction}
 \label{subsec:splitconformal}
 
-In this subsection, we will present the split conformal prediction algorithm. We will show that it is, in fact, a special case of full conformal prediction, and so the coverage guarantee from \cref{subsec:fullconformal} also holds for split conformal prediction. We will also compare full and split conformal prediction, discussing the advantages and disadvantages of one over the other.\vskip5pt
+In this subsection, we will present the split conformal prediction algorithm. We will show that it is, in fact, a special case of full conformal prediction, and so the coverage guarantee from \cref{subsec:fullconformal} also holds for split conformal prediction. We will also compare full and split conformal prediction, discussing their respective advantages and disadvantages.\vskip5pt
 
 \noindent
 For split conformal prediction, we assume that we are given a function \(\hat{s}:\mathcal{X} \times \mathcal{Y} \to \mathbb{R}\) that depends on a \textit{proper training set} \(D_\mathrm{tr} \in \cup_{j \geq 1} \mathcal{Z}^j \) that is disjoint from the calibration data \(D_\mathrm{cal} \coloneqq ((X_i, Y_i))_{i=1}^n\).  Split conformal prediction then uses the calibration data together with \(\hat{s}\) and \(X_{n+1}\), to form a prediction set for \(Y_{n+1}\). \vskip5pt
 
 \noindent
-Before proving the coverage guarantee for split conformal prediction, we introduce the necessary notation. Let \(\hat{S}_i = \hat{s}(X_i, Y_i)\) for \(i \in [n]\) and let \(\hat{S} = (\hat{S}_1, \ldots, \hat{S}_n)\).
+Before proving the coverage guarantee for split conformal prediction, we introduce the necessary notation. Let \(\hat{S}_i = \hat{s}(X_i, Y_i)\) for \(i \in [n]\) and let \(\hat{S}_{n+1}^y = \hat{s}(X_{n+1}, y)\) for any \(y \in \mathcal{Y}\).
 
 \begin{theorem}
-    Suppose \((X_1, Y_1), \ldots, (X_n, Y_n) \in \mathcal{Z}\) are exchangeable. Define the prediction set \begin{equation}
-        C(X_{n+1}) = \left\{ y \in \mathcal{Y} : \hat{s}(X_{n+1}, y) \leq \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right) \right\}.
+    Suppose \((X_1, Y_1), \ldots, (X_n, Y_n), (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) are exchangeable. Define the prediction set \begin{equation}
+        C(X_{n+1}) = \left\{ y \in \mathcal{Y}: \  \hat{S}_{n+1}^y \leq \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha)  \right\}.
     \label{eqn:splitconformal_prediction_set}
     \end{equation} Then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha.\] If, moreover, the scores \(\hat{S}_1, \ldots, \hat{S}_{n+1}\) are almost surely distinct, then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \leq 1-\alpha + \frac{1}{n+1}.\]
 \label{thm:splitconformal_coverage}
@@ -345,22 +368,25 @@ Before proving the coverage guarantee for split conformal prediction, we introdu
 \end{proof}
 
 \begin{algorithm}[H]
+\label{alg:split_conformal}
 \caption{Split conformal prediction algorithm}
-\label{alg:splitconformal}
 \begin{algorithmic}
     \Require Calibration \(((X_i, Y_i))_{i=1}^n\); test predictor \(X_{n+1}\); miscoverage level \(\alpha \in (0,1)\), conformity score \(\hat{s}\).
     \State Initialise \(C \gets \emptyset\)
-    \State Compute \(\hat{S}_i = \hat{s}(X_i,Y_i)\) for each \(i \in [n]\) and set \(\hat{S} = (\hat{S}_1, \ldots, \hat{S}_n).\)
-    \For{\(y \in \mathcal{Y}\)}
-        \State Compute \(\hat{s}(X_{n+1}, y)\).
-        \State Compute \(\hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right)\) as the \(\lceil (1-\alpha)(n+1) \rceil \) smallest of \(\hat{S}_1, \ldots, \hat{S}_n\).
-        \If{\(\hat{s}(X_{n+1}, y) \leq \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right)\)}
-            \State \(C \gets C \cup \{y\} \).
-        \EndIf
-    \EndFor
+    \If{\(\lceil (1-\alpha)(n+1) \rceil > n\)}
+        \State \(C = \mathcal{Y}\)
+    \Else
+        \State Compute \(\hat{S}_i = \hat{s}(X_i,Y_i)\) for each \(i \in [n]\).
+        \For{\(y \in \mathcal{Y}\)}
+            \State Compute \(\hat{s}(X_{n+1}, y)\).
+            \State Compute \(\hat{Q}\) as the \(\lceil (1-\alpha)(n+1) \rceil \) smallest element in the list \(\hat{S}_1, \ldots, \hat{S}_n\).
+            \If{\(\hat{s}(X_{n+1}, y) \leq \hat{Q}\)}
+                \State \(C \gets C \cup \{y\} \).
+            \EndIf   
+        \EndFor
+    \EndIf
     \Ensure \(C\)
 \end{algorithmic}
-\label{alg:split_conformal}
 \end{algorithm}
 
 \begin{remark}
@@ -368,22 +394,159 @@ Before proving the coverage guarantee for split conformal prediction, we introdu
 \end{remark}
 
 \begin{remark}
-    Note that the split conformal coverage guarantee imposes no restrictions on \(D_\mathrm{tr}\) and the fitting procedure used to obtain \(\hat{s}\), whereas full conformal prediction requires the conformity score to be symmetric. Moreover, split conformal prediction has the advantage that it is more computationally efficient than full conformal prediction. Indeed - as discussed in the above remark - in split conformal prediction, we must only fit the model once to obtain \(\hat{s}\) and compute the conformity scores on the calibration data. However, in full conformal prediction, we must refit the model for each \(y \in \mathcal{Y}\) since we compute the conformity score with respect to a dataset that includes the point \((X_{n+1}, y)\). On the other hand, full conformal prediction has the advantage that it uses all of the training data to fit the model, whereas in split conformal prediction, we may typically only use half of the full training set as the proper training set and the other half as the calibration set.
+    Note that the split conformal coverage guarantee imposes no restrictions on \(D_\mathrm{tr}\) and the fitting procedure used to obtain \(\hat{s}\), whereas full conformal prediction requires the conformity score to be symmetric. Moreover, split conformal prediction has the advantage that it is more computationally efficient than full conformal prediction. Indeed - as discussed in the above remark - in split conformal prediction, we must only fit the model once to obtain \(\hat{s}\). However, in full conformal prediction, we must refit the model for each \(y \in \mathcal{Y}\) since we compute the conformity score with respect to a dataset that includes the point \((X_{n+1}, y)\). On the other hand, full conformal prediction has the advantage that it uses all of the training data to fit the model, whereas in split conformal prediction, we may typically only use half of the full training set as the proper training set and the other half as the calibration set.
 \end{remark}
 
 \begin{example}
-Consider the regression setting as in \cref{example:absolute_residual_score}. Suppose \(\hat{\mu}\) is an estimate of the regression function obtained from the proper training set \(D_\mathrm{tr}\). In the case of split conformal prediction, we refer to the conformity score \[\hat{s}(x,y) = |y - \hat{\mu}(x)|\] as the \textit{absolute residual score}. Note that in this case the prediction set is an interval centered at \(\hat{\mu}(X_{n+1}) \) since \begin{align*}
-    C(X_{n+1}) &= \left\{y \in \mathbb{R}: \, |y - \hat{\mu}(X_{n+1}) | \leq \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right) \right\} \\
-    &= \left[ \hat{\mu}(X_{n+1}) - \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right), \ \hat{\mu}(X_{n+1}) + \hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right) \right].
-\end{align*}
+Consider the regression setting as in \cref{example:absolute_residual_score} and assume \(p = 1\) so that \(\mathcal{X} = \mathbb{R}\). Suppose \(\hat{\mu}\) is an estimate of the regression function obtained from the proper training set \(D_\mathrm{tr}\). In the case of split conformal prediction, we refer to the conformity score \[\hat{s}(x,y) = |y - \hat{\mu}(x)|\] as the \textit{absolute residual score}. Note that in this case the prediction set is an interval centered at \(\hat{\mu}(x) \) since \begin{align}
+    C(x) &= \left\{y \in \mathbb{R}: \, |y - \hat{\mu}(x) | \leq \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha) \right\} \nonumber \\
+    &= \left[ \hat{\mu}(X_{n+1}) - \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha), \ \hat{\mu}(x) + \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha) \right] \label{eqn:split_absolute_residual_prediction_set}.
+\end{align}
 \noindent
 It is important to note that this simplified form of the prediction set is a consequence of \cref{lemma:quantile_lemma} and split conformal prediction procedure. Specifically, this form of the prediction set arises from the fact that neither the estimated regression function, nor the quantile used in the definition of the prediction set depend on \(y\). The former is a consequence of the split conformal prediction procedure, which ensures \(\hat{\mu}\) only depends on the proper training set \(D_\mathrm{tr}\). The latter is a consequence of both the split conformal algorithm, which ensures \(S_i^y = \hat{s}(X_i, Y_i)\) is independent of \(y\) (as in the proof of \cref{thm:splitconformal_coverage}), and \cref{lemma:quantile_lemma}, which ensures the quantile used in the prediction set depends only on \(D_\mathrm{cal}\).
-
+\label{example:splitCP_absolute_residual_score}
 \end{example}
 
+\noindent
+We now present a numerical experiment to provide a concrete example of split conformal prediction to illustrate the ideas from this subsection. As mentioned in the above remarks, both the form of the conformity score \(\hat{s}\) and the fitting procedure used to obtain it may, in theory, be arbitary. However, in practice, both of these can significantly affect the final prediction set. The choice of the form of the conformity score will be discussed in more detail in \cref{subsec:conformityscore}. In the numerical experiment below, we demonstrate the effect of the choice of the fitting procedure on the prediction set. \vskip5pt
+
+\noindent
+We conduct a numerical experiment with simulated data generated as follows: \begin{align*}
+    X_1, X_2, \ldots &\overset{\R{i.i.d.}}{\sim} \R{Uniform}(-5, 5) \\
+    Y_i | X_i &\overset{\R{indep.}}{\sim} \mathcal{N}\left( \mu(X_i), \ 0.5^2 \right),
+\end{align*} for each \(i\), where \[\mu(x) = \frac{1}{1+x^2} + \frac{2}{1+(x-3)^2}.\] We use this data-generating process to generate independent proper training, calibration and test datasets with sizes \(1000\), \(3000\) and \(3000\), respectively. We train regression models on the proper training set using both linear regression and random forests, where hyperparameters of the random forest are chosen via \(5-\)fold cross-validation. We then use split conformal prediction with the absolute residual score on the calibration dataset to prediction sets for each data point in the test dataset. \textcolor{red}{The code for this numerical experiment is provided in [insert filename].} We now compare the prediction intervals obtained using both of these models.\vskip5pt
+
+\noindent
+Given a test dataset \(D_\R{test}\) with i.i.d data points, as above, we may compute the \textit{empirical coverage} \[\frac{1}{|D_\R{test}|} \sum_{(X, Y) \in D_\R{test}} \mathbbm{1}\{ Y \in C(X) \}\] as an estimate of the true coverage. By \cref{thm:splitconformal_coverage}, we expect the empirical coverage to be close to \(1-\alpha\) for any choice of fitting procedure and conformity score, provided \(|D_\R{test}|\) is large. Indeed, for this numerical example, we find that the empirical coverage is \(0.8993\) and \(0.9053\) for the linear regression and random forest model, respectively. Although both methods provide the desired coverage, it is clear from \cref{fig:split_LR_RF} that the random forests model is a better fit compared to the linear regression model. This is reflected by the fact that the average length of the conformal prediction intervals in the random forest model (1.6978) is smaller than that in the linear regression model (2.0773). Mathematically, we can explain this by considering \eqref{eqn:split_absolute_residual_prediction_set}. Since the distribution of the absolute residual scores of the calibration data points is more skewed towards zero (due to the random forests model having a better fit), the quantile \(\hat{Q}_{\hat{S}} \left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right)\) will be lower for the random forests model and so the prediction intervals will be shorter on average. Overall, this numerical experiment highlights that whilst any model fitting procedure can theoretically be used, a better fitting procedure is more desirable as the resulting conformal prediction intervals are on average narrower.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/2_3_LR_RF_example.png}
+    \caption{Plot of the test data, the fitted regression function and the split conformal prediction interval using linear regression (left) and random forests (right). The fitted regression function is denoted \(\hat{\mu}_{LR}\)} (left) and \(\hat{\mu}_{RF}\) (right). \label{fig:split_LR_RF}
+\end{figure}
 
 \subsection{Choice of conformity score}
 \label{subsec:conformityscore}
+
+In \cref{subsec:splitconformal}, we showed that any conformity score can be used to construct the split conformal prediction set \eqref{eqn:split_absolute_residual_prediction_set}. However, it is not immediately clear from \eqref{eqn:split_absolute_residual_prediction_set} how the choice of conformity score affects the prediction set. We gain some insight into this from \cref{example:splitCP_absolute_residual_score}, where we see that for split conformal prediction with the absolute residual score, the conformity score influences the width of the prediction interval \textcolor{red}{through the quantile}. In this subsection, we further explore how the choice of conformity score affects the properties of the resulting prediction set. In addition to the absolute residual score, we consider two further examples of conformity scores in the regression setting and compare them through numerical experiments. Throughout this subsection, we use split conformal prediction.
+
+\subsubsection{Regression}
+
+We work in the regression setting as in \cref{example:splitCP_absolute_residual_score} with \(\mathcal{X} = \mathbb{R}\). Consider the absolute residual score and its corresponding predicition interval \eqref{eqn:split_absolute_residual_prediction_set}. We observe that a consequence of using the absolute residual score is that the prediction interval has a constant width for all \(x \in \mathbb{R}.\) If the data generating process is heteroscedastic, i.e. \(\R{Var}(Y | X = x)\) is not constant in \(x\), then the prediction interval \eqref{eqn:split_absolute_residual_prediction_set} does not accurately capture the uncertainty in \(Y\) given \(X = x\). This is closely related to the fact that \cref{thm:splitconformal_coverage} only guarantees \textit{marginal coverage} \[\Prob{Y_{n+1} \in C(X_{n+1}) } \geq 1-\alpha\] as opposed to \textit{test-conditional coverage} \[\Prob{Y_{n+1} \in C(X_{n+1}) \, | \, X_{n+1} } \geq 1-\alpha.\] This means that conformal prediction does not guarantee \(1-\alpha\) level coverage at every \(x \in \mathcal{X}\), but rather only on average over \(x\). The two conformity scores we present aim to make the prediction interval adaptive to heteroscedasticity. 
+
+\subsubsection{Locally Weighted Residual Score}
+
+If \(\hat{\mu}\) is an estimate of the regression function \(\mu:x \mapsto \Exp{Y | X = x}{(}{)}\) and \(\hat{\sigma}\) is an estimate of the \textit{conditional mean absolute deviation} \(x \mapsto \Exp{|Y-\mu(X)| \, \mid X = x}{(}{)}\), then the \textit{locally weighted score} is the conformity score given by \begin{equation}
+    \hat{s}(x,y) = \frac{| y - \hat{\mu}(x)|}{\hat{\sigma}(x)}.
+\end{equation} The corresponding prediction set is given by \begin{equation}
+    C(x) = \left[ \hat{\mu}(x) - \hat{\sigma}(x) \, \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha), \ \hat{\mu}(x) + \hat{\sigma}(x) \, \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha) \right],
+\end{equation} using the notation of \cref{subsec:splitconformal}. \vskip5pt
+
+\noindent
+This conformity score was originally introduced in \cite{lei2018} and aims to account for heteroscedasticity but scaling the width of the interval in \eqref{eqn:split_absolute_residual_prediction_set} by \(\hat{\sigma}(x)\) for each \(x \in \mathcal{X}\). In practice, \(\hat{\sigma}\) can be estimated by first regressing \(Y_i\) onto \(X_i\) for \((X_i, Y_i) \in D_\R{tr}\) to obtain \(\hat{\mu}\) and then regress \(|Y_i -\hat{\mu}(X_i)|\) onto \(X_i\) for \((X_i, Y_i) \in D_\R{tr}\).
+
+\subsubsection{Conformalised Quantile Regression}
+
+A second approach to generate prediction intervals that are adaptive to heteroscedasticity is to estimate the conditional quantiles directly. This is referred to as \textit{quantile regression}. In this essay, we do not discuss the numerous methods for performing quantile regression. However, we note that they rely on the following fact. \vskip5pt
+
+\noindent
+Define the \textit{pinball loss} by \(\ell(y, y') = \rho_\tau(y - y')\), where \[\rho_\tau(u) = u(\tau - \Ind{u < 0} ) = \begin{cases}
+    u\tau &\quad \text{if } u \geq 0, \\
+    u(\tau - 1) &\quad \text{otherwise.}
+\end{cases}\]
+
+\subsubsection{Numerical Experiments}
+
+In this section, we present numerical experiments designed to highlight that the locally weighted score and conformalised quantile regression are more adaptive to heteroscedasticity. We consider two data generating processes. Setting 1 generates i.i.d. data points with homoscedastic noise, and setting 2 generates i.i.d data points with heteroscedastic noise.
+\begin{enumerate}[(i)]
+    \item \textbf{Setting 1: } \begin{align*}
+        X_1, X_2, \ldots &\overset{\R{i.i.d}}{\sim} \R{Uniform}(-5,5) \\
+        \epsilon_1, \epsilon_2, \ldots &\overset{\R{i.i.d}}{\sim} \mathcal{N}(0,1) \\
+        Y_i &= 1 - X_i + 2\epsilon_i. 
+    \end{align*} for all \(i \in [n]\).
+    \item \textbf{Setting 2: } \begin{align*}
+        X_1, X_2, \ldots &\overset{\R{i.i.d}}{\sim} \R{Uniform}(-5,5) \\
+        \epsilon_1, \epsilon_2, \ldots &\overset{\R{i.i.d}}{\sim} \mathcal{N}(0,1) \\
+        Y_i &= 1 - X_i + \frac{1}{2}(|X_i| + 2)(\sin(2X_i) + 3/2) \, \epsilon_i
+    \end{align*} for all \(i \in [n]\).    
+\end{enumerate}
+
+\noindent
+In each setting, we generate independent proper training, calibration and test datasets with sizes \(1000\), \(3000\) and \(3000\), respectively, set \(\alpha = 0.1\) and generate conformal prediction intervals for the test dataset using the absolute residual score, the locally weighted residual score and conformalised quantile regression. \textcolor{red}{Further details on the exact implementation and the code are provided in the appendix.} In \cref{tab:2_4_settings1_2_results}, we record the empirical coverage and the average length of the prediction intervals calculated on the test dataset. In \cref{fig:2_4_homoscedastic} and \cref{fig:2_4_heteroscedastic}, we plot the prediction intervals obtained using these three methods. \vskip5pt
+
+\noindent
+We observe that all three methods provide the target coverage in both settings. This is guaranteed by the theoretical coverage guarantee for split conformal prediction in \cref{thm:splitconformal_coverage} since all the data points are i.i.d., and thus exchangeable. However, we clearly see in \cref{fig:2_4_heteroscedastic} that the width of the prediction intervals \(C(x)\) obtained using the locally weighted residual score and conformalised quantile regression vary with \(x\) to account for the heteroscedasticity. Since the absolute residual score generates prediction intervals whose width is constant (in \(x\)), we see in \cref{fig:2_4_heteroscedastic_RF} that these overcover in some regions and undercover in others. Therefore, the absolute residual score yields wider prediction intervals as compared to the other two methods, which can be seen in \cref{tab:2_4_settings1_2_results}. This is further emphasised in \cref{fig:2_4_local_cov_setting2}, where we estimate the conditional coverage \(\Prob{Y_{n+1} \in C(X_{n+1} ) | X_{n+1}}\) by dividing the covariate space \((-5,5)\) into smaller subintervals and calculating the empirical coverage for the test dataset on each subinterval. This plot demonstrates that the locally weighted score and conformalised quantile regression provide improved conditional coverage compared to the absolute residual score.
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{|c|c|p{1.5cm}|c|p{1.5cm}|c|c|}
+        \hline
+        & \multicolumn{2}{c|}{Absolute residual} & \multicolumn{2}{c|}{Locally weighted} & \multicolumn{2}{c|}{Conformalised quantile regression} \\
+        \hline
+        & Coverage & Average length & Coverage & Average length & Coverage & Average length \\
+        \hline
+        Setting 1 & 0.9010 & 6.616 & 0.9027 & 6.632 & 0.9017 & 6.712 \\
+        Setting 2 & 0.9003 & 13.03 & 0.9063 & 11.58 & 0.9027 & 11.55 \\
+        \hline
+    \end{tabular}
+    \caption{Empirical coverage and average length of the conformal prediction intervals on the test dataset}
+    \label{tab:2_4_settings1_2_results}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\linewidth]{figures/2_4_homoscedastic_RF.png}    
+    \caption{Absolute residual score} \label{fig:2_4_homoscedastic_RF}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\linewidth]{figures/2_4_homoscedastic_LW.png}
+    \caption{Locally weighted score} \label{fig:2_4_homoscedastic_LW}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\linewidth]{figures/2_4_homoscedastic_CQR.png}    
+    \caption{Conformalised quantile regression} \label{fig:2_4_homoscedastic_CQR}
+    \end{subfigure}
+    \caption{Conformal prediction intervals in setting 1.}
+\label{fig:2_4_homoscedastic}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+    \includegraphics[width=\linewidth]{figures/2_4_heteroscedastic_RF.png}    
+    \caption{Absolute residual score} \label{fig:2_4_heteroscedastic_RF}
+    \end{subfigure}
+    \begin{subfigure}{0.48\textwidth}
+    \includegraphics[width=\linewidth]{figures/2_4_heteroscedastic_LW.png}
+    \caption{Locally weighted score} \label{fig:2_4_heteroscedastic_LW}
+    \end{subfigure}
+    \medskip
+    \begin{subfigure}{0.48\textwidth}
+    \includegraphics[width=\linewidth]{figures/2_4_heteroscedastic_CQR.png}    
+    \caption{Conformalised quantile regression} \label{fig:2_4_heteroscedastic_CQR}
+    \end{subfigure}
+    \begin{subfigure}{0.48\textwidth}
+    \includegraphics[width=\linewidth]{figures/2_4_local_cov_setting2.png}    
+    \caption{Local coverage} \label{fig:2_4_local_cov_setting2}
+    \end{subfigure}
+    \caption{Conformal prediction intervals in setting 2.}
+\label{fig:2_4_heteroscedastic}
+\end{figure}
+
+
+\section{Extensions of Conformal Prediction}
+
+\subsection{Covariate Shift}
+
+\subsection{Nonexchangeable Conformal Prediction}
+
+
+In this subsection, we present the \textit{nonexchangeable conformal prediction} (NexCP) method developed in \cite{barber2023conformalbeyondexch}. In \cref{sec:foundations_of_CP}, we saw that the coverage guarantee of full conformal prediction relied on two key assumptions: the exchangeability of the data and the symmetry of the conformity score.
+
+
+
 
 %This is how you can start a new page
 \vfill \eject
