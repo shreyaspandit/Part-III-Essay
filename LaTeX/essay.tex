@@ -45,6 +45,8 @@
 \usepackage{caption}
 \usepackage{subcaption}
 
+\DeclareMathOperator*{\argmin}{argmin}
+
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 
@@ -447,17 +449,48 @@ This conformity score was originally introduced in \cite{lei2018} and aims to ac
 
 \subsubsection{Conformalised Quantile Regression}
 
-A second approach to generate prediction intervals that are adaptive to heteroscedasticity is to estimate the conditional quantiles directly. This is referred to as \textit{quantile regression}. In this essay, we do not discuss the numerous methods for performing quantile regression. However, we note that they rely on the following fact. \vskip5pt
+A second approach to generate prediction intervals that are adaptive to heteroscedasticity is to estimate the conditional quantile function \begin{equation}
+    q_{\tau}(x) = \inf \left\{ z \in \mathbb{R}: \Prob{Y \leq z | X = x} \geq \tau \right\}, \quad \tau \in (0,1)
+\end{equation} directly. This is motivated by noting that \[\Prob{Y \in [q_{\alpha/2}(X), q_{1-\alpha/2}(X)] \ | \  X} = 1-\alpha,\] i.e. the interval \([q_{\alpha/2}(X), q_{1-\alpha/2}(X)]\) has exact \((1-\alpha)-\)level test-conditional coverage. The approach of estimating \(q_\tau(x)\) is referred to as \textit{quantile regression}. In this essay, we do not discuss details of the numerous methods for constructing quantile regression estimators. However, we note that the following important fact. \vskip5pt
 
 \noindent
-Define the \textit{pinball loss} by \(\ell(y, y') = \rho_\tau(y - y')\), where \[\rho_\tau(u) = u(\tau - \Ind{u < 0} ) = \begin{cases}
+Define the \(\tau-\)\textit{pinball loss} by \(\ell(y, y') = \rho_\tau(y - y')\), where \[\rho_\tau(u) = u(\tau - \Ind{u < 0} ) = \begin{cases}
     u\tau &\quad \text{if } u \geq 0, \\
     u(\tau - 1) &\quad \text{otherwise.}
 \end{cases}\]
 
+\begin{lemma}
+    Let \(U\) be a real-valued random variable with density \(f\) and strictly increasing cumulative distribution function \(F\). Then for all \(\tau \in (0,1)\), we have that \[F^{-1}(\tau) = \argmin_{t \in \mathbb{R}} \Exp{\ell(Y,t)}{(}{)}\] 
+\end{lemma}
+\begin{proof}
+    We have that \begin{align*}
+        \Exp{\ell(Y,t)}{(}{)} = \Exp{\rho_\tau(Y-t)}{(}{)} &= \int_{-\infty}^\infty \rho_\tau(y-t) f(y) \, \R{d}y \\
+        &= \int_{-\infty}^t (\tau-1) (y-t) f(y) \, \R{d}y + \int_t^\infty \tau(y-t) f(y) \, \R{d}y.
+    \end{align*}
+    Equating the derivative of the above expression with respect to \(t\) to \(0\) gives \[\int_{-\infty}^t (1-\tau) f(y) \, \R{d}y - \int_t^\infty \tau f(y) \, \R{d}y = (1-\tau)F(t) - \tau(1-F(t))  =  0,\] which is equivalent to \[t = F^{-1}(\tau).\] The second derivative is equal to \(f(t)\), so \(F^{-1}(\tau)\) is indeed a minimiser.
+\end{proof}
+
+\noindent
+Therefore, in the same way that training a model with respect to the least-squares loss gives an estimate for the conditional mean, training a model with respect to the \(\tau-\)pinball loss gives an estimate of the \(\tau^{\R{th}}\) quantile of the conditional distribution \(Y|X\). \vskip5pt
+
+\noindent
+Using a quantile regression procedure, we may obtain estimates \(\hat{q}_{\alpha/2}(x)\) and \(\hat{q}_{1-\alpha/2}(x)\) for \(q_{\alpha/2}(x)\) and \(q_{1-\alpha/2}(x)\), respectively. However, the interval \([\hat{q}_{\alpha/2}(x), \hat{q}_{1-\alpha/2}(x)]\) may not be guaranteed to have \((1-\alpha)-\)level coverage in finite samples. \textit{Conformalised quantile regression} \cite{romano2019_CQR} calibrates this interval using conformal prediction to provide it with a finite-sample coverage guarantee as in \cref{thm:splitconformal_coverage}. \vskip5pt
+
+\noindent
+After obtaining estimates \(\hat{q}_{\alpha/2}(x)\) and \(\hat{q}_{1-\alpha/2}(x)\) from the proper training set, conformalised quantile regression applies split conformal prediction with the conformity score \begin{equation}
+    \hat{s}(x,y) = \max\left\{ \hat{q}_{\alpha/2}(x) - y, \, y - \hat{q}_{1-\alpha/2}(x) \right\}.
+\label{eqn:CQR_conformity_score}
+\end{equation} This results in the conformal prediction interval \begin{align}
+    &\left\{ y \in \mathbb{R}: \hat{q}_{\alpha/2}(X_{n+1}) - y \leq \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha) \quad \R{and} \quad y - \hat{q}_{1-\alpha/2}(X_{n+1}) \leq \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha) \right\} \nonumber \\
+    &= \left[\hat{q}_{\alpha/2}(X_{n+1}) - \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha), \hat{q}_{1-\alpha/2}(X_{n+1}) + \hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha)  \right].
+\end{align}
+
+\noindent
+To intuitively understand this score, we note the following. If \(y < \hat{q}_{\alpha/2}(x)\), i.e. \(y\) is below the predicted lower quantile, then \(\hat{s}(x,y) = |y - \hat{q}_{\alpha/2}(x)|\) is the absolute error compared to the predicted lower quantile. Similarly, if \(y > \hat{q}_{1-\alpha/2}(x)\), then \(\hat{s}(x,y) = |y - \hat{q}_{1-\alpha/2}(x)|.\) In both of these cases, \(\hat{s}(x,y) \geq 0\), indicating the interval \([\hat{q}_{\alpha/2}(x), \hat{q}_{1-\alpha/2}(x)]\) has failed to cover \(y\), and its value measures the magnitude of the error in the fitted model with respect to \((x,y)\). If \(\hat{q}_{\alpha/2}(x) < y < \hat{q}_{1-\alpha/2}(x)\), i.e. the interval \([\hat{q}_{\alpha/2}(x), \hat{q}_{1-\alpha/2}(x)]\) covers \(y\), then \(\hat{s}(x,y) < 0\) and \[\hat{s}(x,y) = \min \left\{ y - \hat{q}_{\alpha/2}(x), \, \hat{q}_{1-\alpha/2}(x) - y \right\},\] which may be interpreted as the smaller of the two "margins" by which the interval \([\hat{q}_{\alpha/2}(x), \hat{q}_{1-\alpha/2}(x)]\) covers \(y\). Note that this contrasts to the conformity scores we have seen previously, which could only take on non-negative values. We see from the above that if the estimated interval \([\hat{q}_{\alpha/2}(x), \hat{q}_{1-\alpha/2}(x)]\) overcovers, then conformalised quantile regression narrows the interval, and if the estimated interval undercovers, then conformalised quantile regression widens the interval.
+
 \subsubsection{Numerical Experiments}
 
-In this section, we present numerical experiments designed to highlight that the locally weighted score and conformalised quantile regression are more adaptive to heteroscedasticity. We consider two data generating processes. Setting 1 generates i.i.d. data points with homoscedastic noise, and setting 2 generates i.i.d data points with heteroscedastic noise.
+We now present numerical experiments designed to highlight that the locally weighted score and conformalised quantile regression are more adaptive to heteroscedasticity. We consider two data generating processes. Setting 1 generates i.i.d. data points with homoscedastic noise, and setting 2 generates i.i.d data points with heteroscedastic noise.
 \begin{enumerate}[(i)]
     \item \textbf{Setting 1: } \begin{align*}
         X_1, X_2, \ldots &\overset{\R{i.i.d}}{\sim} \R{Uniform}(-5,5) \\
@@ -472,7 +505,7 @@ In this section, we present numerical experiments designed to highlight that the
 \end{enumerate}
 
 \noindent
-In each setting, we generate independent proper training, calibration and test datasets with sizes \(1000\), \(3000\) and \(3000\), respectively, set \(\alpha = 0.1\) and generate conformal prediction intervals for the test dataset using the absolute residual score, the locally weighted residual score and conformalised quantile regression. \textcolor{red}{Further details on the exact implementation and the code are provided in the appendix.} In \cref{tab:2_4_settings1_2_results}, we record the empirical coverage and the average length of the prediction intervals calculated on the test dataset. In \cref{fig:2_4_homoscedastic} and \cref{fig:2_4_heteroscedastic}, we plot the prediction intervals obtained using these three methods. \vskip5pt
+In each setting, we generate independent proper training, calibration and test datasets, set \(\alpha = 0.1\) and generate conformal prediction intervals for the test dataset using the absolute residual score, the locally weighted residual score and conformalised quantile regression. \textcolor{red}{Further details on the exact implementation and the code are provided in the appendix.} In \cref{tab:2_4_settings1_2_results}, we record the empirical coverage and the average length of the prediction intervals calculated on the test dataset. In \cref{fig:2_4_homoscedastic} and \cref{fig:2_4_heteroscedastic}, we plot the prediction intervals obtained using these three methods. \vskip5pt
 
 \noindent
 We observe that all three methods provide the target coverage in both settings. This is guaranteed by the theoretical coverage guarantee for split conformal prediction in \cref{thm:splitconformal_coverage} since all the data points are i.i.d., and thus exchangeable. However, we clearly see in \cref{fig:2_4_heteroscedastic} that the width of the prediction intervals \(C(x)\) obtained using the locally weighted residual score and conformalised quantile regression vary with \(x\) to account for the heteroscedasticity. Since the absolute residual score generates prediction intervals whose width is constant (in \(x\)), we see in \cref{fig:2_4_heteroscedastic_RF} that these overcover in some regions and undercover in others. Therefore, the absolute residual score yields wider prediction intervals as compared to the other two methods, which can be seen in \cref{tab:2_4_settings1_2_results}. This is further emphasised in \cref{fig:2_4_local_cov_setting2}, where we estimate the conditional coverage \(\Prob{Y_{n+1} \in C(X_{n+1} ) | X_{n+1}}\) by dividing the covariate space \((-5,5)\) into smaller subintervals and calculating the empirical coverage for the test dataset on each subinterval. This plot demonstrates that the locally weighted score and conformalised quantile regression provide improved conditional coverage compared to the absolute residual score.
@@ -514,20 +547,20 @@ We observe that all three methods provide the target coverage in both settings. 
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}{0.48\textwidth}
+    \begin{subfigure}{0.45\textwidth}
     \includegraphics[width=\linewidth]{figures/2_4_heteroscedastic_RF.png}    
     \caption{Absolute residual score} \label{fig:2_4_heteroscedastic_RF}
     \end{subfigure}
-    \begin{subfigure}{0.48\textwidth}
+    \begin{subfigure}{0.45\textwidth}
     \includegraphics[width=\linewidth]{figures/2_4_heteroscedastic_LW.png}
     \caption{Locally weighted score} \label{fig:2_4_heteroscedastic_LW}
     \end{subfigure}
-    \medskip
-    \begin{subfigure}{0.48\textwidth}
+    \begin{subfigure}{0.45\textwidth}
     \includegraphics[width=\linewidth]{figures/2_4_heteroscedastic_CQR.png}    
     \caption{Conformalised quantile regression} \label{fig:2_4_heteroscedastic_CQR}
     \end{subfigure}
-    \begin{subfigure}{0.48\textwidth}
+    \medskip
+    \begin{subfigure}{0.45\textwidth}
     \includegraphics[width=\linewidth]{figures/2_4_local_cov_setting2.png}    
     \caption{Local coverage} \label{fig:2_4_local_cov_setting2}
     \end{subfigure}
@@ -538,14 +571,72 @@ We observe that all three methods provide the target coverage in both settings. 
 
 \section{Extensions of Conformal Prediction}
 
-\subsection{Covariate Shift}
-
 \subsection{Nonexchangeable Conformal Prediction}
 
 
-In this subsection, we present the \textit{nonexchangeable conformal prediction} (NexCP) method developed in \cite{barber2023conformalbeyondexch}. In \cref{sec:foundations_of_CP}, we saw that the coverage guarantee of full conformal prediction relied on two key assumptions: the exchangeability of the data and the symmetry of the conformity score.
+In this subsection, we present the \textit{nonexchangeable conformal prediction} (NexCP) method developed in \cite{barber2023conformalbeyondexch}. In \cref{sec:foundations_of_CP}, we saw that the coverage guarantee of full conformal prediction relied on two key assumptions: the exchangeability of the data and the symmetry of the conformity score. \textcolor{red}{We saw that if the exchangeability assumption is violated, the coverage may deviate significantly from the target \(1-\alpha\) level.} The key theoretical contribution of \cite{barber2023conformalbeyondexch}, presented in \textcolor{red}{theorem ref}, is the development of a modified conformal prediction procedure where the loss of coverage due to violation of the above assumptions can be quantified. Furthermore, this result suggests empirical approaches to reduce this loss of coverage. \vskip5pt
+
+\noindent
+Before we present the main theorem of this subsection, we introduce the following notation. Given data points \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\), \(y \in \mathcal{Y}\) and \(k \in [n+1]\), we define \[D = ((X_i, Y_i))_{i=1}^{n+1}, \quad D^{y} = ((X_i, Y_i)_{i=1}^n, (X_{n+1}, y)), \quad \quad D^{(k)} = \pi_k(D), \quad \mathrm{and} \quad D^{y, (k)} = \pi_k(D^{y}). \] where \(\pi_k \in S_{n+1}\) is the transposition exchanging \(k\) and \(n+1\). Given a conformity score \(s\), we additionally define \[S = (s((X_i, Y_i); D))_{i=1}^{n+1}, \quad \mathrm{and} \quad S^{(k)} = ( s(( X_{\pi_k(i)}, Y_{\pi_k(i)} ); D^{(k)}) )_{i=1}^{n+1}.\] We also define \[S_i^{y, (k)} = \begin{cases}
+    s(( X_i, Y_i ); D^{y, (k)}) \quad &\mathrm{if} \ i = 1, \ldots, n \\
+    s(( X_{n+1}, y ); D^{y, (k)}) \quad &\mathrm{if} \ i = n+1,
+\end{cases} \quad \mathrm{and} \quad S^{y, (k)} = (S_i^{y,(k)})_{i=1}^{n+1}.\]
+
+\noindent
+We fix \textit{weights} \(w_1, \ldots, w_{n} \in [0, \infty)\) and correspondingly define \begin{equation}
+    \tilde{w_i} = \frac{w_i}{1+\sum_{j=1}^n w_j} \quad \mathrm{and} \quad \tilde{w}_{n+1} = \frac{1}{1+\sum_{j=1}^n w_j}
+\label{eqn:nexcp_weights_defn}
+\end{equation} for all \(i \in [n]\). \vskip5pt
+
+\noindent
+We define \(K\) to be random variable taking values in \([n+1]\) such that \begin{equation}
+    \Prob{K = k} = \tilde{w}_k
+\label{eqn:nexcp_K_defn}
+\end{equation} for all \(k \in [n+1]\), and we take \(K\) and \(D\) to be independent.
+
+\begin{theorem}
+    Let \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) be a sequence of tagged data points and \(s\) be a conformity score. Let \(w_1, \ldots, w_{n+1} \in [0, \infty)\) be fixed real numbers and define \(\tilde{w}_i\) according to \eqref{eqn:nexcp_weights_defn} for all \(i \in [n+1]\). Let \(K\) be a random variable as in \eqref{eqn:nexcp_K_defn} that is independent of \(D\). Define the prediction set \begin{equation}
+        C(X_{n+1}) = \left\{ y \in \mathcal{Y} : \ S_{n+1}^{y, (K)} \leq \hat{Q}_{S^{y, (K)}}^{\tilde{w}}(1-\alpha)  \right\}.
+    \label{eqn:nexcp_prediction_set}
+    \end{equation} Then we have that \begin{equation}
+        \Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha - \sum_{k=1}^n \R{d_{TV}}(S, S^{(k)}).
+    \end{equation}
+\label{thm:nexCP_coverage}
+\end{theorem}
+\begin{proof}
+    If \(Y_{n+1} \not \in C(X_{n+1})\), then \[S_{n+1}^{Y_{n+1}, (K)} > \hat{Q}^{\tilde{w}}_{S_{n+1}^{Y_{n+1}, (K)}}(1-\alpha).\] This implies that \[S_{n+1}^{Y_{n+1}, (K)} > \hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha)\] by \textcolor{red}{cite lemma}. We now claim that \[\hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha) \geq \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha).\] If \(K = n+1\), this is shown in the proof of \textcolor{red}{quantile lemma}. If \(K \leq n\), we have that for any \(x \in \mathbb{R}\), \begin{align*}
+        \hat{F}^{\tilde{w}}_{S^{(K)}}(x) &= \sum_{i=1}^{n+1} \tilde{w}_i \Ind{x \geq S_{\pi_K(i)}^{Y_{n+1}, (K)}} \\
+        &= \sum_{\substack{i = 1 \\ i \neq K}}^{n} \tilde{w}_i \Ind{x \geq S_i^{Y_{n+1}, (K)}} + \tilde{w}_K \Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} + \tilde{w}_{n+1} \Ind{x \geq S_K^{Y_{n+1}, (K)}} \\
+        &= \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x) + \tilde{w}_K \Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} + \tilde{w}_{n+1} \Ind{x \geq S_K^{Y_{n+1}, (K)}} \\
+        & \hspace{4.8cm} -  \tilde{w}_K \Ind{x \geq S_{K}^{Y_{n+1}, (K)}} - \tilde{w}_{n+1} \Ind{x \geq \infty} \\
+        &= \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x) + \tilde{w}_K \left (\Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} - \Ind{x \geq \infty} \right) \\
+        & \hspace{4.8cm} + \left( \tilde{w}_{n+1} - \tilde{w}_K\right) \left(\Ind{x \geq S_{K}^{Y_{n+1}, (K)}} - \Ind{x \geq \infty} \right) \\
+        & \geq \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x).
+    \end{align*}
+    Therefore, we have that \[\hat{F}^{\tilde{w}}_{S^{(K)}}\left( \hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha) \right) \geq 1-\alpha,\] by \textcolor{red}{basic lemma on quantiles} which shows the claim above. \vskip5pt
+
+    \noindent
+    So far, we have shown that \[Y_{n+1} \not \in C(X_{n+1}) \implies S_{n+1}^{Y_{n+1}, (K)} >\hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha).\] Noting that \(S_{n+1}^{Y_{n+1}, (K)} = S_K^{(K)}\), this implies that \[\Prob{Y_{n+1} \in C(X_{n+1}) } \geq 1 - \Prob{ S_K^{(K)} > \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha) }. \]
+    \noindent
+    For \(r \in \mathbb{R}^{n+1}\), define \[\mathcal{S}(r) = \left\{ i \in [n+1]: \ r_i > \hat{Q}^{\tilde{w}}_r(1-\alpha) \right\}.\] Note that for any \(r \in \mathbb{R}^{n+1}\), \begin{align*}
+        \sum_{i \in \mathcal{S}(r)} \tilde{w}_i &= \sum_{i=1}^{n+1} \tilde{w}_i \Ind{r_i > \hat{Q}^{\tilde{w}}_r(1-\alpha)} \\
+        &= \sum_{i=1}^{n+1} \tilde{w}_i \Ind{\sum_{j=1}^{n+1} \tilde{w_j} \Ind{r_j < r_i} \geq 1-\alpha} \\
+        &= \sum_{i=1}^{n+1} \tilde{w}_i \Ind{\sum_{j=1}^{n+1} \tilde{w_j} \Ind{r_i \leq r_j} \leq \alpha} \leq \alpha
+    \end{align*} by \cref{lemma:harrison_2012}. \vskip5pt
+    
+    \noindent
+    Thus, we have that \begin{align*}
+        \Prob{ S_K^{(K)} > \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha) } &= \Prob{K \in \mathcal{S}(S^{(K)})} \\
+        &= \sum_{k=1}^{n+1} \tilde{w}_k \Prob{k \in \mathcal{S}(S^{(k)})} \\
+        &= \sum_{k=1}^{n+1} \tilde{w}_k \Prob{k \in \mathcal{S}(S)} + \sum_{k=1}^{n+1} \tilde{w}_k \left[\Prob{k \in \mathcal{S}(S^{(k)})} - \Prob{k \in \mathcal{S}(S)} \right] \\
+        &= \Exp{\sum_{k \in \mathcal{S}(S)} \tilde{w}_k }{[}{]} + \sum_{k=1}^{n} \tilde{w}_k \left[\Prob{k \in \mathcal{S}(S^{(k)})} - \Prob{k \in \mathcal{S}(S)} \right] \\
+        &\leq \alpha + \sum_{k=1}^n \tilde{w}_k \, \R{d_{TV}}(S, S^{(k)}),
+    \end{align*} where the second equality follows from the independence of \(K\) and the data, we use the result above and we note that \(S^{(n+1)} = S\). Overall, we deduce that \[\Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha - \sum_{k=1}^n \R{d_{TV}}(S, S^{(k)}).\]
+
+\end{proof}
 
 
+\subsection{Covariate Shift}
 
 
 %This is how you can start a new page
