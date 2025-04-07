@@ -156,22 +156,20 @@ Note that if \(Z_1, \ldots, Z_n\) are exchangeable random variables taking value
 \label{rmk:exch_ordering}
 \end{remark}
 
-\begin{definition}
-    Let \(P\) be a probability distribution on \(\mathbb{R}\) with cumulative distribution function \(F\). The \textit{quantile function} of \(P\) is defined for \(\beta \in (0,1)\) by \[Q(P;\beta) \coloneqq \inf\left\{ z \in \mathbb{R}: F(z) \geq \beta \right\}.\] We may also use the notation \(Q(F;\beta)\) in place of \(Q(P;\beta)\).
-\label{defn:prob_quantile}
-\end{definition}
+% \begin{definition}
+%     Let \(P\) be a probability distribution on \(\mathbb{R}\) with cumulative distribution function \(F\). The \textit{quantile function} of \(P\) is defined for \(\beta \in (0,1)\) by \[Q(P;\beta) \coloneqq \inf\left\{ z \in \mathbb{R}: F(z) \geq \beta \right\}.\] We may also use the notation \(Q(F;\beta)\) in place of \(Q(P;\beta)\).
+% \label{defn:prob_quantile}
+% \end{definition}
 
 \begin{definition}
-    For \(z \in \mathbb{R}^n\), we define the following quantities. \begin{enumerate}[(i)] \itemsep0em
-        \item The \textit{empirical cumulative distribution function} of \(z\) is the function \(F_z: (-\infty, \infty] \to [0,1]\) given for \(x \in (0, \infty)\) by \[\hat{F}_z(x) \coloneqq \frac{1}{n}\sum_{i=1}^n \Ind{z_i \leq x}.  \] We define \(\hat{F}_z(\infty) = 1\).
-        \item The \textit{quantile function} \(\hat{Q}_z:(0,1] \to (-\infty, \infty]\) of \(z\) is defined for \(\beta \in (0,1]\) by \[\hat{Q}_z(\beta) \coloneqq \inf \left\{ x \in (-\infty, \infty]: \hat{F}_z(x) \geq \beta \right\}.\]
+    Let \(w = (w_1, \ldots, w_n) \in [0,1]^n\) be real numbers such that \(\sum_{i=1}^n w_i = 1\) and let \(z \in \mathbb{R}^n\). We define the following quantities. \begin{enumerate}[(i)] \itemsep0em
+        \item The \textit{weighted empirical cumulative distribution function} of \(z\) with respect to the \textit{weights} \(w\) is the function \(F^w_z: (-\infty, \infty] \to [0,1]\) given for \(x \in (-\infty, \infty]\) by \[\hat{F}^{w}_z(x) \coloneqq \sum_{i=1}^n w_i \Ind{z_i \leq x}.  \] We define \(\hat{F}^w_z(\infty) = 1\).
+        \item The \textit{empirical cumulative distribution function} of \(z\) is the function \(\hat{F}_z: (-\infty, \infty] \to [0,1]\) given for \(x \in (-\infty, \infty]\) by \[\hat{F}_z(x) = \hat{F}^{(1/n, \ldots, 1/n)}(x) = \frac{1}{n}\sum_{i=1}^n \Ind{z_i \leq x}.\]
+        \item The \textit{weighted quantile function} \(\hat{Q}_z:(0,1] \to (-\infty, \infty]\) of \(z\) with respect to the weights \(w\) is defined for \(\beta \in (0,1]\) by \[\hat{Q}_z(\beta) \coloneqq \inf \left\{ x \in (-\infty, \infty]: \hat{F}^w_z(x) \geq \beta \right\}.\]
+        \item The \textit{quantile function} \(\hat{Q}_z:(0,1] \to (-\infty, \infty]\) of \(z\) is defined for \(\beta \in (0,1]\) by \[\hat{Q}_z(\beta) \coloneqq \hat{Q}^{(1/n, \ldots, 1/n)}_z(\beta).\]
     \end{enumerate}
 \label{defn:empirical_cdfquantile}
 \end{definition}
-
-\begin{remark}
-    Note that \(\hat{F}_z\) is the cumulative distribution function of the probability distribution \[\frac{1}{n} \sum_{i=1}^n \delta_{z_i},\] where \(\delta_{a}\) denotes the Dirac measure at \(a\), for any \(a \in \mathbb{R}\). We also have that \[\hat{Q}_z(\beta) = Q\left( \frac{1}{n}\sum_{i=1}^n \delta_{z_i} ; \, \beta \right),\] so \(\hat{Q}_z\) is the quantile function of the probability distribution \(\frac{1}{n} \sum_{i=1}^n \delta_{z_i}.\)
-\end{remark}
 
 \noindent
 The following lemma formalises a sense in which the empirical cumulative distribution and quantile functions are inverses of each other.
@@ -210,7 +208,6 @@ We now prove a lemma which is fundamental in the proof of the coverage guarantee
     In the case where \(Z_1, \ldots, Z_n\) are almost surely distinct, we can obtain the above result using an even simpler argument. Fix \(i \in [n]\). As discussed in \cref{rmk:exch_ordering}, each of the \(n!\) orderings of \(Z = (Z_1, \ldots, Z_n)\) are equally likely. For any \(k \in [n]\), Since there are \((n-1)!\) orderings where \(Z_i\) is the \(k^\mathrm{th}\) smallest element of \(Z\), we deduce that the probability that \(Z_i\) is the \(k^\mathrm{th}\) smallest element of \(Z\) is \(1/n\). Summing over \(k\) ranging from \(1\) to \(\lceil \beta n \rceil\) gives that \[\Prob{Z_i \leq \hat{Q}_Z(\beta)} = \frac{\lceil{\beta n}\rceil}{n}.\]
 \label{rmk:exch_rank_argument}
 \end{remark}
-
 
 \subsection{Full conformal prediction}
 \label{subsec:fullconformal}
@@ -280,32 +277,60 @@ Before formally proving the coverage guarantee, we introduce the notation for th
 \noindent
 We now derive an equivalent characterisation of the prediction set that we will use in the remainder of this essay and that will be particularly useful in the next subsection. In order to do this, we first present a lemma.
 
+% \begin{lemma}
+%     For any \(z \in \mathbb{R}^n\), \(y \in \mathbb{R}\) and \(\beta \in (0,1]\), we have that \[y \leq \hat{Q}_{(z,y)} (\beta) \iff y \leq \begin{cases}
+%         \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \quad &\R{if} \ \frac{\lceil \beta(n+1) \rceil}{n} \leq 1, \\
+%         \infty \quad &\R{otherwise}.
+%     \end{cases} \]
+% \label{lemma:quantile_lemma}
+% \end{lemma}
+
+% \begin{proof}
+%     First suppose that \(y \leq \hat{Q}_{(z,y)}(\beta)\). Note that by \cref{defn:empirical_cdfquantile}, we have that \[\hat{F}_{(z,y)} (x) = \frac{1}{n+1} \left( \sum_{i=1}^n \Ind{z_i \leq x} + \Ind{y \leq x} \right) = \frac{n}{n+1} \hat{F}_z(x) + \frac{1}{n+1}\Ind{y \leq x}.\] If \( \frac{\lceil \beta (n+1) \rceil}{n} \leq 1\), then it follows that \[\hat{F}_{(z,y)}\left(  \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \hat{F}_z \left( \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \frac{\beta(n+1)}{n} \geq \beta \] by \cref{lemma:cdfquantile}. We deduce that \begin{align}
+%         \hat{Q}_{(z,y)}(\beta) \leq \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right).
+%     \label{eqn:quantile_lemma_disp1}
+%     \end{align} Clearly \(y \leq \infty\), so this proves the forward direction of the lemma. To prove the converse direction, first note that if \(y > \hat{Q}_{(z,y)}(\beta)\), then we have that \begin{align}
+%         \hat{F}_z(\hat{Q}_{(z,y)}(\beta)) &= \frac{n+1}{n} \hat{F}_{(z,y)}(\hat{Q}_{(z,y)}(\beta)) - \frac{1}{n} \Ind{y \leq \hat{Q}_{(z,y)}(\beta)} \label{eqn:quantile_lemma_disp2}\\
+%         &= \frac{n+1}{n} \hat{F}_{(z,y)} (\hat{Q}_{(z,y)} (\beta) ) \nonumber\\
+%         &= \frac{n+1}{n} \hat{F}_{(z,y)} \left(  \hat{Q}_{(z,y)} \left( \frac{\lceil \beta (n+1) \rceil }{n+1} \right) \right) \nonumber\\
+%         &\geq \frac{\lceil \beta (n+1) \rceil }{n} \nonumber, 
+%     \end{align} where the final inequality follows from \cref{lemma:cdfquantile}. If \(\frac{\lceil \beta (n+1) \rceil}{n} \leq 1\), then this implies that \[y > \hat{Q}_{(z,y)}(\beta) \geq \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil}{n} \right), \] a contradiction, so \(y \leq \hat{Q}_{(z,y)}(\beta)\). If \(\frac{\lceil\beta  (n+1) \rceil}{n} > 1\), then it implies \(\hat{F}_z(\hat{Q}_{(z,y)}(\beta)) > 1\), a contradiction, so \(y \leq \hat{Q}_{(z,y)}(\beta).\)
+% \end{proof}
+
+% \begin{remark}
+%     Note that for any \(z \in \mathbb{R}^n\) and \(\beta \in (0,1]\), \[\hat{Q}_{(z,\infty)} (\beta) = \begin{cases}
+%         \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \quad &\R{if} \ \frac{\lceil \beta(n+1) \rceil}{n} \leq 1, \\
+%         \infty \quad &\R{otherwise}.
+%         \end{cases}\] This follows from \eqref{eqn:quantile_lemma_disp1} and \eqref{eqn:quantile_lemma_disp2} upon noting that \(\hat{Q}_{(z,\infty)}(\beta) < \infty\) if \(\beta \leq \frac{n}{n+1}\), which is equivalent to \(\frac{\lceil \beta (n+1) \rceil}{n} \leq 1\).
+% \end{remark}
+
 \begin{lemma}
-    For any \(z \in \mathbb{R}^n\), \(y \in \mathbb{R}\) and \(\beta \in (0,1]\), we have that \[y \leq \hat{Q}_{(z,y)} (\beta) \iff y \leq \begin{cases}
-        \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \quad &\R{if} \ \frac{\lceil \beta(n+1) \rceil}{n} \leq 1, \\
-        \infty \quad &\R{otherwise}.
-    \end{cases} \]
+    Let \(z \in \mathbb{R}^n\), \(y \in \mathbb{R}\) and \(w \in [0,1]^n\) such that \(\sum_{i=1}^n w_i = 1\). We have that for any \(\beta \in (0,1)\), \[y \leq \hat{Q}^w_{(z,y)}(\beta) \iff y \leq \hat{Q}^w_{(z,\infty)}(\beta).\]
 \label{lemma:quantile_lemma}
 \end{lemma}
-
 \begin{proof}
-    First suppose that \(y \leq \hat{Q}_{(z,y)}(\beta)\). Note that by \cref{defn:empirical_cdfquantile}, we have that \[\hat{F}_{(z,y)} (x) = \frac{1}{n+1} \left( \sum_{i=1}^n \Ind{z_i \leq x} + \Ind{y \leq x} \right) = \frac{n}{n+1} \hat{F}_z(x) + \frac{1}{n+1}\Ind{y \leq x}.\] If \( \frac{\lceil \beta (n+1) \rceil}{n} \leq 1\), then it follows that \[\hat{F}_{(z,y)}\left(  \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \hat{F}_z \left( \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) \geq \frac{n}{n+1} \frac{\beta(n+1)}{n} \geq \beta \] by \cref{lemma:cdfquantile}. We deduce that \begin{align}
-        \hat{Q}_{(z,y)}(\beta) \leq \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil }{n} \right).
-    \label{eqn:quantile_lemma_disp1}
-    \end{align} Clearly \(y \leq \infty\), so this proves the forward direction of the lemma. To prove the converse direction, first note that if \(y > \hat{Q}_{(z,y)}(\beta)\), then we have that \begin{align}
-        \hat{F}_z(\hat{Q}_{(z,y)}(\beta)) &= \frac{n+1}{n} \hat{F}_{(z,y)}(\hat{Q}_{(z,y)}(\beta)) - \frac{1}{n} \Ind{y \leq \hat{Q}_{(z,y)}(\beta)} \label{eqn:quantile_lemma_disp2}\\
-        &= \frac{n+1}{n} \hat{F}_{(z,y)} (\hat{Q}_{(z,y)} (\beta) ) \nonumber\\
-        &= \frac{n+1}{n} \hat{F}_{(z,y)} \left(  \hat{Q}_{(z,y)} \left( \frac{\lceil \beta (n+1) \rceil }{n+1} \right) \right) \nonumber\\
-        &\geq \frac{\lceil \beta (n+1) \rceil }{n} \nonumber, 
-    \end{align} where the final inequality follows from \cref{lemma:cdfquantile}. If \(\frac{\lceil \beta (n+1) \rceil}{n} \leq 1\), then this implies that \[y > \hat{Q}_{(z,y)}(\beta) \geq \hat{Q}_z \left( \frac{\lceil \beta (n+1) \rceil}{n} \right), \] a contradiction, so \(y \leq \hat{Q}_{(z,y)}(\beta)\). If \(\frac{\lceil\beta  (n+1) \rceil}{n} > 1\), then it implies \(\hat{F}_z(\hat{Q}_{(z,y)}(\beta)) > 1\), a contradiction, so \(y \leq \hat{Q}_{(z,y)}(\beta).\)
+    First note that \[
+        \hat{F}^w_{(z,\infty)}(x) = \sum_{i=1}^n w_i \Ind{x \geq z_i} + w_{n+1} \Ind{x \geq \infty} \leq \sum_{i=1}^n w_i \Ind{x \geq z_i} + w_{n+1} \Ind{x \geq y} = \hat{F}^w_{(z,y)}(x).
+    \] Therefore, \(\hat{F}^w_{(z,y)}(\hat{Q}^w_{(z, \infty)}(\beta)) \geq \hat{F}^w_{(z,\infty)}(\hat{Q}^w_{(z, \infty)}(\beta)) \geq \beta\), which implies that \begin{equation}
+        \hat{Q}^w_{(z, \infty)}(\beta) \geq \hat{Q}^w_{(z, y)}(\beta).
+    \label{eqn:quantile_lemma_pt1}
+    \end{equation} This proves the forward direction of the lemma. Now suppose that \(y > \hat{Q}^w_{(z,y)}(\beta).\) Then we have that \begin{align*}
+        \hat{F}^w_{(z,\infty)}(\hat{Q}^w_{(z, y)}(\beta)) &= \sum_{i=1}^n w_i \Ind{\hat{Q}^w_{(z, y)}(\beta) \geq z_i} + w_{n+1} \Ind{\hat{Q}^w_{(z, y)}(\beta) \geq \infty} \\
+        &= \hat{F}^w_{(z,y)}(\hat{Q}^w_{(z, y)}(\beta)) + w_{n+1} \left( \Ind{\hat{Q}^w_{(z, y)}(\beta) \geq \infty} - \Ind{\hat{Q}^w_{(z, y)}(\beta) \geq y} \right) \\
+        &= \hat{F}^w_{(z,y)}(\hat{Q}^w_{(z, y)}(\beta)) \geq \beta.
+    \end{align*} This implies that \[\hat{Q}^w_{(z, y)}(\beta) \geq \hat{Q}^w_{(z, \infty)}(\beta),\] which together with \eqref{eqn:quantile_lemma_pt1}, also implies \[\hat{Q}^w_{(z, y)}(\beta) = \hat{Q}^w_{(z, \infty)}(\beta).\] Thus, \(y > \hat{Q}^w_{(z, \infty)}(\beta)\), which completes the proof of the lemma.
 \end{proof}
 
-\begin{remark}
-    Note that for any \(z \in \mathbb{R}^n\) and \(\beta \in (0,1]\), \[\hat{Q}_{(z,\infty)} (\beta) = \begin{cases}
+\begin{lemma}
+    Let \(z \in \mathbb{R}^n\) and \(\beta \in (0,1)\). Then we have that \[\hat{Q}_{(z,\infty)} (\beta) = \begin{cases}
         \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \quad &\R{if} \ \frac{\lceil \beta(n+1) \rceil}{n} \leq 1, \\
         \infty \quad &\R{otherwise}.
-        \end{cases}\] This follows from \eqref{eqn:quantile_lemma_disp1} and \eqref{eqn:quantile_lemma_disp2} upon noting that \(\hat{Q}_{(z,\infty)}(\beta) < \infty\) if \(\beta \leq \frac{n}{n+1}\), which is equivalent to \(\frac{\lceil \beta (n+1) \rceil}{n} \leq 1\).
-\end{remark}
+        \end{cases}\]
+\label{lemma:quantile_lemma_extra}
+\end{lemma}
+\begin{proof}
+    First note that the condition \(\frac{\lceil \beta(n+1) \rceil}{n} \leq 1\) is equivalent to \(\beta \leq \frac{n}{n+1}\). If \(\beta > \frac{n}{n+1}\), then \(\hat{Q}_{(z, \infty)}(\beta) = \infty\) since \(\frac{1}{n+1}\sum_{i=1}^n \Ind{x \geq z_i} \leq \frac{n}{n+1}.\) Now observe that for any \(x < \infty\), we have that \[\hat{F}_{(z, \infty)}(x) = \frac{1}{n+1} \Ind{x \geq z_i} + \frac{1}{n+1}\Ind{x \geq \infty} = \frac{n}{n+1} \hat{F}_z(x).\] If \(\beta \leq \frac{n}{n+1}\), we have that \[\frac{\beta(n+1)}{n} \leq \frac{n+1}{n}  \hat{F}_{(z,\infty)}(\hat{Q}_{(z,\infty)}(\beta)) = \hat{F}_{z}(\hat{Q}_{(z,\infty)}(\beta)),\] which implies that \[\hat{Q}_{(z,\infty)}(\beta) \geq \hat{Q}_{z}\left(\frac{\beta(n+1)}{n}\right) = \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right).\] We also have that \[\hat{F}_{(z, \infty)}\left( \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) = \frac{n}{n+1} \hat{F}_{z}\left( \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) = \frac{n}{n+1}\frac{\lceil \beta (n+1) \rceil }{n} \geq \beta. \] This shows that \[\hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) = \hat{Q}_{(z, \infty)}(\beta).\]
+\end{proof}
 
 \noindent The following reformulation of \cref{thm:fullconformal_coverage} is an immediate consequence of \cref{lemma:quantile_lemma}.
 
@@ -576,6 +601,18 @@ We observe that all three methods provide the target coverage in both settings. 
 
 In this subsection, we present the \textit{nonexchangeable conformal prediction} (NexCP) method developed in \cite{barber2023conformalbeyondexch}. In \cref{sec:foundations_of_CP}, we saw that the coverage guarantee of full conformal prediction relied on two key assumptions: the exchangeability of the data and the symmetry of the conformity score. \textcolor{red}{We saw that if the exchangeability assumption is violated, the coverage may deviate significantly from the target \(1-\alpha\) level.} The key theoretical contribution of \cite{barber2023conformalbeyondexch}, presented in \textcolor{red}{theorem ref}, is the development of a modified conformal prediction procedure where the loss of coverage due to violation of the above assumptions can be quantified. Furthermore, this result suggests empirical approaches to reduce this loss of coverage. \vskip5pt
 
+\begin{lemma}[\cite{harrison2012} Lemma A.1]
+    Let \(t = (t_1, \ldots, t_n) \in \mathbb{R}^n\) and \(w = (w_1, \ldots, w_n) \in \mathbb[0,1]^n\) such that \(\sum_{i=1}^n w_i = 1\). For any \(\beta \in (0,1)\), we have that \[\sum_{k=1}^n w_k \Ind{\sum_{i=1}^n w_i \Ind{t_i \geq t_k } \leq \beta} \leq \beta.\]
+\label{lemma:harrison_2012}
+\end{lemma}
+\begin{proof}
+    Define \((\hat{F}^w_t)_- (x) \coloneqq \lim_{y \uparrow x} \hat{F}^w_t(y) = \sum_{k=1}^n w_k \Ind{x > t_k} \). Then we have that \begin{align*}
+        \sum_{k=1}^n w_k \Ind{\sum_{i=1}^n w_i \Ind{t_i \geq t_k } \leq \beta} &= \sum_{k=1}^n w_k \Ind{(\hat{F}^w_t)_-(t_k) \geq 1-\beta} \\
+        &= \sum_{k=1}^n w_k \Ind{t_k > \hat{Q}^w_t(1-\beta)} \\
+        &= 1 - \hat{F}^w_t(\hat{Q}^w_t(1-\beta)) \leq \beta.
+    \end{align*}
+\end{proof}
+
 \noindent
 Before we present the main theorem of this subsection, we introduce the following notation. Given data points \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\), \(y \in \mathcal{Y}\) and \(k \in [n+1]\), we define \[D = ((X_i, Y_i))_{i=1}^{n+1}, \quad D^{y} = ((X_i, Y_i)_{i=1}^n, (X_{n+1}, y)), \quad \quad D^{(k)} = \pi_k(D), \quad \mathrm{and} \quad D^{y, (k)} = \pi_k(D^{y}). \] where \(\pi_k \in S_{n+1}\) is the transposition exchanging \(k\) and \(n+1\). Given a conformity score \(s\), we additionally define \[S = (s((X_i, Y_i); D))_{i=1}^{n+1}, \quad \mathrm{and} \quad S^{(k)} = ( s(( X_{\pi_k(i)}, Y_{\pi_k(i)} ); D^{(k)}) )_{i=1}^{n+1}.\] We also define \[S_i^{y, (k)} = \begin{cases}
     s(( X_i, Y_i ); D^{y, (k)}) \quad &\mathrm{if} \ i = 1, \ldots, n \\
@@ -585,26 +622,26 @@ Before we present the main theorem of this subsection, we introduce the followin
 \noindent
 We fix \textit{weights} \(w_1, \ldots, w_{n} \in [0, \infty)\) and correspondingly define \begin{equation}
     \tilde{w_i} = \frac{w_i}{1+\sum_{j=1}^n w_j} \quad \mathrm{and} \quad \tilde{w}_{n+1} = \frac{1}{1+\sum_{j=1}^n w_j}
-\label{eqn:nexcp_weights_defn}
+\label{eqn:nexCP_weights_defn}
 \end{equation} for all \(i \in [n]\). \vskip5pt
 
 \noindent
 We define \(K\) to be random variable taking values in \([n+1]\) such that \begin{equation}
     \Prob{K = k} = \tilde{w}_k
-\label{eqn:nexcp_K_defn}
+\label{eqn:nexCP_K_defn}
 \end{equation} for all \(k \in [n+1]\), and we take \(K\) and \(D\) to be independent.
 
 \begin{theorem}
-    Let \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) be a sequence of tagged data points and \(s\) be a conformity score. Let \(w_1, \ldots, w_{n+1} \in [0, \infty)\) be fixed real numbers and define \(\tilde{w}_i\) according to \eqref{eqn:nexcp_weights_defn} for all \(i \in [n+1]\). Let \(K\) be a random variable as in \eqref{eqn:nexcp_K_defn} that is independent of \(D\). Define the prediction set \begin{equation}
+    Let \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) be a sequence of tagged data points and \(s\) be a conformity score. Let \(w_1, \ldots, w_{n+1} \in [0, \infty)\) be fixed real numbers and define \(\tilde{w}_i\) according to \eqref{eqn:nexCP_weights_defn} for all \(i \in [n+1]\). Let \(K\) be a random variable as in \eqref{eqn:nexCP_K_defn} that is independent of \(D\). Define the prediction set \begin{equation}
         C(X_{n+1}) = \left\{ y \in \mathcal{Y} : \ S_{n+1}^{y, (K)} \leq \hat{Q}_{S^{y, (K)}}^{\tilde{w}}(1-\alpha)  \right\}.
-    \label{eqn:nexcp_prediction_set}
+    \label{eqn:nexCP_prediction_set}
     \end{equation} Then we have that \begin{equation}
         \Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha - \sum_{k=1}^n \R{d_{TV}}(S, S^{(k)}).
     \end{equation}
 \label{thm:nexCP_coverage}
 \end{theorem}
 \begin{proof}
-    If \(Y_{n+1} \not \in C(X_{n+1})\), then \[S_{n+1}^{Y_{n+1}, (K)} > \hat{Q}^{\tilde{w}}_{S_{n+1}^{Y_{n+1}, (K)}}(1-\alpha).\] This implies that \[S_{n+1}^{Y_{n+1}, (K)} > \hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha)\] by \textcolor{red}{cite lemma}. We now claim that \[\hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha) \geq \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha).\] If \(K = n+1\), this is shown in the proof of \textcolor{red}{quantile lemma}. If \(K \leq n\), we have that for any \(x \in \mathbb{R}\), \begin{align*}
+    If \(Y_{n+1} \not \in C(X_{n+1})\), then \[S_{n+1}^{Y_{n+1}, (K)} > \hat{Q}^{\tilde{w}}_{S_{n+1}^{Y_{n+1}, (K)}}(1-\alpha).\] This implies that \[S_{n+1}^{Y_{n+1}, (K)} > \hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha)\] by \cref{lemma:quantile_lemma}. We now claim that \[\hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha) \geq \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha).\] If \(K = n+1\), this is shown in the proof of \cref{lemma:quantile_lemma}. If \(K \leq n\), we have that for any \(x \in \mathbb{R}\), \begin{align*}
         \hat{F}^{\tilde{w}}_{S^{(K)}}(x) &= \sum_{i=1}^{n+1} \tilde{w}_i \Ind{x \geq S_{\pi_K(i)}^{Y_{n+1}, (K)}} \\
         &= \sum_{\substack{i = 1 \\ i \neq K}}^{n} \tilde{w}_i \Ind{x \geq S_i^{Y_{n+1}, (K)}} + \tilde{w}_K \Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} + \tilde{w}_{n+1} \Ind{x \geq S_K^{Y_{n+1}, (K)}} \\
         &= \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x) + \tilde{w}_K \Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} + \tilde{w}_{n+1} \Ind{x \geq S_K^{Y_{n+1}, (K)}} \\
@@ -613,7 +650,7 @@ We define \(K\) to be random variable taking values in \([n+1]\) such that \begi
         & \hspace{4.8cm} + \left( \tilde{w}_{n+1} - \tilde{w}_K\right) \left(\Ind{x \geq S_{K}^{Y_{n+1}, (K)}} - \Ind{x \geq \infty} \right) \\
         & \geq \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x).
     \end{align*}
-    Therefore, we have that \[\hat{F}^{\tilde{w}}_{S^{(K)}}\left( \hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha) \right) \geq 1-\alpha,\] by \textcolor{red}{basic lemma on quantiles} which shows the claim above. \vskip5pt
+    Therefore, we have that \[\hat{F}^{\tilde{w}}_{S^{(K)}}\left( \hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha) \right) \geq 1-\alpha,\] by \cref{lemma:cdfquantile} which shows the claim above. \vskip5pt
 
     \noindent
     So far, we have shown that \[Y_{n+1} \not \in C(X_{n+1}) \implies S_{n+1}^{Y_{n+1}, (K)} >\hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha).\] Noting that \(S_{n+1}^{Y_{n+1}, (K)} = S_K^{(K)}\), this implies that \[\Prob{Y_{n+1} \in C(X_{n+1}) } \geq 1 - \Prob{ S_K^{(K)} > \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha) }. \]
@@ -635,6 +672,24 @@ We define \(K\) to be random variable taking values in \([n+1]\) such that \begi
 
 \end{proof}
 
+\begin{algorithm}[H]
+    \label{alg:nexCP}
+    \caption{NexCP algorithm}
+    \begin{algorithmic}
+        \Require Calibration \(((X_i, Y_i))_{i=1}^n\); test predictor \(X_{n+1}\); miscoverage level \(\alpha \in (0,1)\), conformity score \(\hat{s}\). 
+        \State Initialise \(C \gets \emptyset\)
+        \State Draw \(K\) from \([n+1]\) according to \eqref{eqn:nexCP_K_defn}.
+
+        \For{\(y \in \mathcal{Y}\)}
+            \State Compute \(S_i^{y, (K)}\) for \(i = 1, \ldots, n+1\)
+            \State Compute \(\hat{Q}^{\tilde{w}}_{S^{y, (K)}}\)
+            \If{\(S_{n+1}^{y, (K)} \leq \hat{Q}^{\tilde{w}}_{S^{y, (K)}}\)}
+                \State \(C \gets C \cup \{y\}\)
+            \EndIf
+        \EndFor
+        \Ensure \(C\)
+    \end{algorithmic}
+\end{algorithm}
 
 \subsection{Covariate Shift}
 
