@@ -116,9 +116,30 @@
 % START WRITING YOUR ESSAY HERE
 
 \section{Introduction}
+
+Quantifying the uncertainty in a prediction produced by a regression or classification model is important to enable these models to be confidently deployed in real-world settings. This typically means that a procedure outputs a set of predictions, as opposed to a single prediction, which contains the true value of the response with a high probability. For example, it is well-known that one can construct exact prediction intervals in the normal linear model and asymptotically valid prediction intervals for generalised linear models. In Bayesian statistics, one can calculate the posterior predictive distribution to quantify uncertainty. An important limitation of all of these methods is that they make strong distributional assumptions on the data-generating process and in some cases, only provide asymptotic guarantees. \vskip5pt
+
+\noindent
+Conformal prediction is a framework for uncertainty quantification developed by \cite{vovk2005algorithmic} that constructs prediction sets whose validity holds in finite-samples and does not depend on the exact distribution of the data. The appeal of conformal prediction is that it can be combined with any existing predictive model to generate a valid prediction interval. In particular, we need not make any assumptions on this predictive model. Due to this, and the continuing success of modern machine learning methods at predictive tasks, conformal prediction is becoming an increasingly prominent topic of research in both statistics and machine learning. \vskip5pt
+
+\noindent
+The task we will focus on in this essay is as follows. Suppose we are given predictor-response pairs \((X_1, Y_1), \ldots, (X_n, Y_n)\), and we would like to predict the true response \(Y_{n+1}\) corresponding to a new predictor \(X_{n+1}\). We aim to use \((X_1, Y_1), \ldots, (X_n, Y_n)\) to construct a prediction set \(C(X_{n+1})\) such that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha, \] where \(\alpha \in (0,1) \) is a chosen confidence level. A result of the above form is referred to as a \textit{coverage guarantee}  \vskip5pt 
+
+\noindent
+We begin \cref{sec:foundations_of_CP} by introducing the key mathematical components of conformal prediction. In \cref{subsec:quantiles_and_exchangeability}, we will introduce the notion of exchangeability, which underpins the validity of conformal prediction. \cref{subsec:fullconformal} will detail the \textit{full conformal prediction} procedure and prove that it achieves the above coverage guarantee. In \cref{subsec:splitconformal}, we will study the \textit{split conformal prediction} procedure, which is a more computationally efficient version of conformal prediction, and prove that it also achieves the above coverage guarantee. To conclude \cref{sec:foundations_of_CP}, the aim of \cref{subsec:conformityscore} is to examine specific instances of split conformal prediction that improve the empirical performance of the procedure and demonstrate this with numerical experiments. \vskip5pt
+
+\noindent
+In \cref{sec:extensions_of_CP}, we explore extensions to the standard conformal prediction framework presented in \cref{sec:foundations_of_CP}. Whilst exchangeability was fundamental in achieving the coverage guarantees in \cref{sec:foundations_of_CP}, the method presented in \cref{subsec:nex_CP} provides a modified coverage guarantee under violations of exchangeability. A specific kind of violation of exchangeability is distribution shift, and a variant of conformal prediction designed to account for this is presented in \cref{subsec:dist_shift}.
+
 \subsection{Notation}
 
+Throughout the essay, we use the following notation.  \vskip5pt
 
+\noindent
+For any positive integer \(n\), we define \([n] = \{1, \ldots, n\}\) and \(S_n\) denotes the symmetric group on \(n\) elements - i.e. the permutations on \(n\) elements. If \(v = (v_1, \ldots, v_n) \in \mathbb{R}^n\) and \(\sigma \in S_n\), then \(\sigma(v) = (v_{\sigma(1)}, \ldots, v_{\sigma(n)}).\) \vskip5pt
+
+\noindent
+We write \(\mathcal{X}\) and \(\mathcal{Y}\) to denote the (measurable) spaces of predictors and responses, respectively. We write \(\mathcal{Z} = \mathcal{X} \times \mathcal{Y}.\) Typically, we think of \(\mathcal{X} = \mathbb{R}^p\) for some positive integer \(p\) and \(\mathcal{Y} = \mathbb{R}\) in the regression setting and \(\mathcal{Y} = [K]\), for some positive integer \(K\), in the classification setting.
 
 
 
@@ -127,10 +148,8 @@
 \section{Foundations of Conformal Prediction}
 \label{sec:foundations_of_CP}
 
-The primary appeal of conformal prediction, as originally developed by Vovk et. al. \cite{vovk2005algorithmic}, lies in the fact that the coverage guarantee holds in a distribution-free sense and in finite samples. Compare this to the construction of prediction sets in classical statistics, which often relies on strong distributional assumptions (such as normality) and may only hold asymptotically. \vskip 5pt
-
 \noindent
-In this chapter, we develop the mathematical foundations of conformal prediction. We begin by defining the key concepts of quantiles, empirical cumulative distribution functions and exchangeability in \cref{subsec:quantiles_and_exchangeability}. In sections \cref{subsec:fullconformal} and \cref{subsec:splitconformal}, we present the two main variants of conformal prediction: full conformal prediction and split conformal prediction, respectively, and prove their coverage guarantees. In \cref{subsec:conformityscore}, we consider specific instances of conformal prediction and compare these through numerical experiments.
+In this chapter, we introduce the key mathematical tools for this essay. The main theoretical result of this section is \cref{thm:fullconformal_coverage} which establishes the coverage guarantee for full conformal prediction.
 
 \subsection{Quantiles and exchangeability}
 \label{subsec:quantiles_and_exchangeability}
@@ -162,7 +181,7 @@ Note that if \(Z_1, \ldots, Z_n\) are exchangeable random variables taking value
 % \end{definition}
 
 \begin{definition}
-    Let \(w = (w_1, \ldots, w_n) \in [0,1]^n\) be real numbers such that \(\sum_{i=1}^n w_i = 1\) and let \(z \in \mathbb{R}^n\). We define the following quantities. \begin{enumerate}[(i)] \itemsep0em
+    Let \(w = (w_1, \ldots, w_n) \in [0,1]^n\) be such that \(\sum_{i=1}^n w_i = 1\) and let \(z \in \mathbb{R}^n\). We define the following quantities. \begin{enumerate}[(i)] \itemsep0em
         \item The \textit{weighted empirical cumulative distribution function} of \(z\) with respect to the \textit{weights} \(w\) is the function \(F^w_z: (-\infty, \infty] \to [0,1]\) given for \(x \in (-\infty, \infty]\) by \[\hat{F}^{w}_z(x) \coloneqq \sum_{i=1}^n w_i \Ind{z_i \leq x}.  \] We define \(\hat{F}^w_z(\infty) = 1\).
         \item The \textit{empirical cumulative distribution function} of \(z\) is the function \(\hat{F}_z: (-\infty, \infty] \to [0,1]\) given for \(x \in (-\infty, \infty]\) by \[\hat{F}_z(x) = \hat{F}^{(1/n, \ldots, 1/n)}(x) = \frac{1}{n}\sum_{i=1}^n \Ind{z_i \leq x}.\]
         \item The \textit{weighted quantile function} \(\hat{Q}_z:(0,1] \to (-\infty, \infty]\) of \(z\) with respect to the weights \(w\) is defined for \(\beta \in (0,1]\) by \[\hat{Q}_z(\beta) \coloneqq \inf \left\{ x \in (-\infty, \infty]: \hat{F}^w_z(x) \geq \beta \right\}.\]
@@ -172,14 +191,21 @@ Note that if \(Z_1, \ldots, Z_n\) are exchangeable random variables taking value
 \end{definition}
 
 \noindent
-The following lemma formalises a sense in which the empirical cumulative distribution and quantile functions are inverses of each other.
+The weighted versions of the quantities above will play an important role in \cref{sec:extensions_of_CP}. Therefore, some of the results of this section are proven for the weighted quantities even if only the special case \(w = (1/n, \ldots, 1/n)\) is required. The following lemma formalises a sense in which the empirical cumulative distribution and quantile functions are inverses of each other.
 
-\begin{lemma}
-    Let \(z \in \mathbb{R}^n\) and \(\beta \in (0,1)\). Then we have that \(\hat{F}_z\left(\hat{Q}_z(\beta)\right) \geq \beta\). If, moreover, the components of \(z\) are distinct, then \(\hat{F}_z\left(\hat{Q}_z(\beta)\right) = \frac{\lceil{n\beta}\rceil}{n}.\)
+\begin{lemma} Let \(z \in \mathbb{R}^n\), \(w = (w_1, \ldots, w_n) \in [0,1]^n\) be such that \(\sum_{i=1}^n w_i = 1\) and \(\beta \in (0,1)\).
+    \begin{enumerate}[(i)] \itemsep0em
+        \item We have that \(\hat{F}^w_z\left(\hat{Q}^w_z(\beta \right) \geq \beta\).
+        \item If the components of \(z\) are distinct, then \(\hat{F}_z\left(\hat{Q}_z(\beta)\right) = \frac{\lceil{n\beta}\rceil}{n}.\)
+    \end{enumerate} 
 \label{lemma:cdfquantile}
 \end{lemma}
 \begin{proof}
-    The first claim follows from the definitions upon noting that \(\hat{F}_z\) is right-continuous. For the second claim, we observe that for all \(x \in \mathbb{R}\), we have that \(\hat{F}_z(x) \in \left\{0, \frac{1}{n}, \ldots, \frac{n-1}{n}, 1\right\}\). Since the components of \(z = (z_1, \ldots, z_n)\) are distinct, \(\hat{F}_z\) jumps by \(\frac{1}{n}\) at each \(z_i\), for \(i \in [n]\). Therefore \[\hat{F}_z\left(\hat{Q}_z(\beta)\right) = \frac{1}{n} \inf \{k \in \{0\} \cup [n]: \ k/n \geq \beta \} = \frac{\lceil{\beta n}\rceil}{n}.\]
+
+    \begin{enumerate}[(i)] \itemsep0em
+        \item The first claim follows from upon noting that \(\hat{F}^w_z\) is right-continuous. Indeed, by the definition of the infimum, there exists a sequence \((x_m)\) of real numbers satisfying \(\hat{F}^w_z(x_m) \geq \beta\) for all \(m\) and \(x_m \downarrow \hat{Q}^w_z(\beta)\) as \(m \to \infty\). By the right continuity of \(\hat{F}^w_z\), it follows that \(\hat{F}^w_z\left(\hat{Q}^w_z(\beta) \right) \geq \beta\).
+        \item We observe that for all \(x \in \mathbb{R}\), we have that \(\hat{F}_z(x) \in \left\{0, \frac{1}{n}, \ldots, \frac{n-1}{n}, 1\right\}\). Since the components of \(z = (z_1, \ldots, z_n)\) are distinct, \(\hat{F}_z\) jumps by \(\frac{1}{n}\) at each \(z_i\), for \(i \in [n]\). Therefore \[\hat{F}_z\left(\hat{Q}_z(\beta)\right) = \frac{1}{n} \inf \{k \in \{0\} \cup [n]: \ k/n \geq \beta \} = \frac{\lceil{\beta n}\rceil}{n}.\]
+    \end{enumerate}
 \end{proof}
 
 \noindent
@@ -271,7 +297,7 @@ Before formally proving the coverage guarantee, we introduce the notation for th
     \end{align*} which shows that \[\Prob{\left(S_{\sigma(1)}, \ldots, S_{\sigma(n+1)}\right) \in A} = \Prob{(S_1, \ldots, S_{n+1}) \in A}, \] so \(S\) is exchangeable. \vskip5pt
 
     \noindent
-    Finally, note that \[Y_{n+1} \in C(X_{n+1}) \iff S_{n+1} \leq \hat{Q}_S(1-\alpha)\] by the definition of \(C(X_{n+1})\). Therefore, \cref{lemma:exch_cdfquantile} implies that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha, \] and that if \(S_1, \ldots, S_{n+1}\) are almost surely distinct, then \[\Prob{Y_{n+1} \in C(X_{n+1})} \leq 1-\alpha + \frac{1}{n+1}.\]
+    Finally, note that \[Y_{n+1} \in C(X_{n+1}) \iff S_{n+1} \leq \hat{Q}_S(1-\alpha)\] by the definition of \(C(X_{n+1})\). Therefore, \cref{lemma:exch_cdfquantile} implies that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha, \] and that if \(S_1, \ldots, S_{n+1}\) are almost surely distinct, then \[\Prob{Y_{n+1} \in C(X_{n+1})} = \frac{\lceil (1-\alpha) (n+1) \rceil }{n+1} \leq 1-\alpha + \frac{1}{n+1}.\]
 \end{proof}
 
 \noindent
@@ -332,6 +358,10 @@ We now derive an equivalent characterisation of the prediction set that we will 
     First note that the condition \(\frac{\lceil \beta(n+1) \rceil}{n} \leq 1\) is equivalent to \(\beta \leq \frac{n}{n+1}\). If \(\beta > \frac{n}{n+1}\), then \(\hat{Q}_{(z, \infty)}(\beta) = \infty\) since \(\frac{1}{n+1}\sum_{i=1}^n \Ind{x \geq z_i} \leq \frac{n}{n+1}.\) Now observe that for any \(x < \infty\), we have that \[\hat{F}_{(z, \infty)}(x) = \frac{1}{n+1} \Ind{x \geq z_i} + \frac{1}{n+1}\Ind{x \geq \infty} = \frac{n}{n+1} \hat{F}_z(x).\] If \(\beta \leq \frac{n}{n+1}\), we have that \[\frac{\beta(n+1)}{n} \leq \frac{n+1}{n}  \hat{F}_{(z,\infty)}(\hat{Q}_{(z,\infty)}(\beta)) = \hat{F}_{z}(\hat{Q}_{(z,\infty)}(\beta)),\] which implies that \[\hat{Q}_{(z,\infty)}(\beta) \geq \hat{Q}_{z}\left(\frac{\beta(n+1)}{n}\right) = \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right).\] We also have that \[\hat{F}_{(z, \infty)}\left( \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) = \frac{n}{n+1} \hat{F}_{z}\left( \hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) \right) = \frac{n}{n+1}\frac{\lceil \beta (n+1) \rceil }{n} \geq \beta. \] This shows that \[\hat{Q}_z\left( \frac{\lceil \beta (n+1) \rceil }{n} \right) = \hat{Q}_{(z, \infty)}(\beta).\]
 \end{proof}
 
+\begin{remark}
+    The key implication of \cref{lemma:quantile_lemma_extra} is that we can reformulate the inequality in \eqref{eqn:fullconformal_prediction_set} in a way that only the left-hand-side depends on \(S_{n+1}^y\), which is stated in \cref{thm:fullconformal_coverage_v2} below. This will be particularly important in \cref{subsec:splitconformal}. 
+\end{remark}
+
 \noindent The following reformulation of \cref{thm:fullconformal_coverage} is an immediate consequence of \cref{lemma:quantile_lemma}.
 
 \begin{theorem}
@@ -343,6 +373,12 @@ We now derive an equivalent characterisation of the prediction set that we will 
 \label{thm:fullconformal_coverage_v2}  
 \end{theorem}
 
+
+\begin{remark}
+    Firstly, we note that in the case \(\frac{\lceil (1-\alpha)(n+1) \rceil}{n} > 1\), we have that \(C(X_{n+1}) = \mathcal{Y}\) since \(\hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)} = \infty\), which trivially covers all test points. However, since \(\frac{\lceil (1-\alpha)(n+1) \rceil}{n} > 1\) is equivalent to \(\alpha < \frac{1}{n+1}\), we can ignore this situation provided \(\alpha\) and \(n\) are not too small. Secondly, we note that if \(z \in \mathbb{R}^n\), then \begin{align*}
+        \hat{Q}_z\left( \frac{\lceil (1-\alpha)(n+1) \rceil}{n} \right) = \inf \left\{ y \in \mathbb{R}: \, \sum_{i=1}^{n} \Ind{z_i \leq y} \geq \lceil (1-\alpha)(n+1) \rceil \right\} =  z_{(\lceil (1-\alpha)(n+1) \rceil)}, 
+    \end{align*} where \(z_{(1)} \leq z_{(2)} \leq \cdots \leq z_{(n)}\) are the \textit{order statistics} of \(z\), defined by \[z_{(k)} = \inf \left\{ y \in \mathbb{R}: \, \sum_{i=1}^{n} \Ind{z_i \leq y} \geq k \right\},\] for \(k \in [n]\). This means the calculation of the quantile \(\hat{Q}_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}\) is simplified to finding the \(\lceil (1-\alpha)(n+1) \rceil\) smallest element in the list \((\hat{S_1}, \ldots, \hat{S}_n)\). This leads to \cref{alg:fullconformal} below.
+\end{remark}
 
 
 \begin{algorithm}[H]
@@ -451,6 +487,33 @@ Given a test dataset \(D_\R{test}\) with i.i.d data points, as above, we may com
     \includegraphics[width=\linewidth]{figures/2_3_LR_RF_example.png}
     \caption{Plot of the test data, the fitted regression function and the split conformal prediction interval using linear regression (left) and random forests (right). The fitted regression function is denoted \(\hat{\mu}_{LR}\)} (left) and \(\hat{\mu}_{RF}\) (right). \label{fig:split_LR_RF}
 \end{figure}
+
+\subsubsection{Training conditional coverage}
+
+Note that the coverage guarantee in \cref{thm:splitconformal_coverage} is marginal over the calibration data \(D_\R{cal}\), i.e. the coverage guarantee is equivalent to \[\Prob{Y_{n+1} \in C(X_{n+1})} = \Exp{\Ind{Y_{n+1} \in C(X_{n+1})} \, | \, D_\R{cal}}{[}{]} \geq 1-\alpha. \] This means that for a randomly drawn calibration set and test point, the prediction set contains the test point with probability \(1-\alpha\).  However, in practice, it may often be the case that only one calibration set is available, and we wish to understand the probability of a random test point being covered conditional on this calibration set, i.e. the quantity \[\Prob{Y_{n+1} \in C(X_{n+1}) \, | \, D_\R{cal}}.\] Note that this is a random quantity since it is a function of the calibration data. In the case of split conformal prediction, it is possible to exactly derive the distribution of this quantity. We provide our own proof of this result, following the steps outlined in \cite{tibs_advanced_topics_homework}.
+
+\begin{lemma}[\cite{tibs_advanced_topics}]
+    Suppose \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1})\) are i.i.d. and suppose that \(\hat{S}_i\) has a continuous distribution. Then \begin{equation}
+        \Prob{Y_{n+1} \in C(X_{n+1}) \, | \, D_\R{cal}} \sim \R{Beta}(k_\alpha, n + 1 - k_\alpha), 
+    \label{eqn:beta_training_conditional}
+    \end{equation} where \(k_\alpha = \lceil (1-\alpha)(n+1) \rceil\).
+\end{lemma}
+\begin{proof}
+    We first claim that if \(U_1, \ldots, U_n \overset{\R{i.i.d.}}{\sim} \R{Uniform}(0,1)\) with order statistics \(U_{(1)} \leq \cdots \leq U_{(n)}, \) then for any \(k \in [n]\), \[U_{(k)} \sim \R{Beta}(k, n+1-k).\] Note that for any \(x \in \mathbb{R}\), we have that \[\Prob{U_{(k)} \leq x} = \sum_{r=k}^{n} \binom{n}{r} x^r (1-x)^{n-r}\] since at least \(k\) of the random variables \(U_1, \ldots, U_n\) must be less than or equal to \(x\) and \(\Prob{U_i \leq x} = x\) for any \(i \in [n]\). Therefore, if \(g(z) = z^r (1-z)^{n-r}\)we have that \begin{align*}
+        \lim_{\epsilon \to 0} \frac{\Prob{x \leq U_{(k)} \leq x+\epsilon}}{\epsilon} &= \sum_{r=k}^{n} \lim_{\epsilon \to 0} \frac{g(x+\epsilon) - g(x)}{\epsilon} \\
+        &= \sum_{r=k}^{n} \binom{n}{r} g'(x) \\
+        &= \sum_{r=k}^{n} \binom{n}{r} r x^{r-1}(1-x)^{n-r} - \sum_{r=k}^{n} \binom{n}{r} (n-r) x^{r}(1-x)^{n-r-1} \\
+        &= n \sum_{r=k-1}^{n-1} \binom{n-1}{r} r x^{r-1}(1-x)^{n-r} -  n \sum_{r=k}^{n-1} \binom{n-1}{r} (n-r) x^{r}(1-x)^{n-r-1} \\
+        &= n \binom{n-1}{k-1} x^{k-1}(1-x)^{n-k},
+    \end{align*}
+    which is the density of a \(\R{Beta}(k, n+1-k)\) distribution. 
+\end{proof}
+
+\noindent
+Let \(F\) be the cumulative distribution function of \(\hat{S}_1, \ldots, \hat{S}_{n+1}.\) It is a standard result (\textcolor{red}{maybe include quick proof}) that \(F(\hat{S}_1), \ldots, \hat{F}(S_{n+1}) \overset{\R{i.i.d.}}{\sim} \R{Uniform}(0,1).\) Therefore, for any \(k \in [n]\) \begin{align*}
+    \Prob{\hat{S}_{n+1} \leq \hat{S}_{(k)} \, | \, D_\R{cal}} = F(\hat{S}_{(k)}) \overset{\R{d}}{=} U_{(k)} \sim \R{Beta}(k, n+1-k)
+\end{align*} since \(F\) is increasing. Finally, we note that \[\Prob{Y_{n+1} \in C(X_{n+1}) \, | \, D_\R{cal}} = \Prob{\hat{S}_{n+1} \leq \hat{S}_{(k_\alpha)} \, | \, D_\R{cal}}\] by \textcolor{red}{remark to be added}, and so the result follows.
+
 
 \subsection{Choice of conformity score}
 \label{subsec:conformityscore}
@@ -595,32 +658,26 @@ We observe that all three methods provide the target coverage in both settings. 
 
 
 \section{Extensions of Conformal Prediction}
+\label{sec:extensions_of_CP}
+
+In \cref{sec:foundations_of_CP}, we saw that the coverage guarantee of full conformal prediction relied on two key assumptions: the exchangeability of the data and the symmetry of the conformity score. \textcolor{red}{We saw that if the exchangeability assumption is violated, the coverage may deviate significantly from the target \(1-\alpha\) level.} \textcolor{red}{Something about why it is important to generalise to nonexchangeable data and examples (e.g. distribution shift) and non-symmetric conformity scores (e.g. can use algorithm that does not treat data symmetrically such as WLS.)} 
 
 \subsection{Nonexchangeable Conformal Prediction}
+\label{subsec:nex_CP}
 
-
-In this subsection, we present the \textit{nonexchangeable conformal prediction} (NexCP) method developed in \cite{barber2023conformalbeyondexch}. In \cref{sec:foundations_of_CP}, we saw that the coverage guarantee of full conformal prediction relied on two key assumptions: the exchangeability of the data and the symmetry of the conformity score. \textcolor{red}{We saw that if the exchangeability assumption is violated, the coverage may deviate significantly from the target \(1-\alpha\) level.} The key theoretical contribution of \cite{barber2023conformalbeyondexch}, presented in \textcolor{red}{theorem ref}, is the development of a modified conformal prediction procedure where the loss of coverage due to violation of the above assumptions can be quantified. Furthermore, this result suggests empirical approaches to reduce this loss of coverage. \vskip5pt
-
-\begin{lemma}[\cite{harrison2012} Lemma A.1]
-    Let \(t = (t_1, \ldots, t_n) \in \mathbb{R}^n\) and \(w = (w_1, \ldots, w_n) \in \mathbb[0,1]^n\) such that \(\sum_{i=1}^n w_i = 1\). For any \(\beta \in (0,1)\), we have that \[\sum_{k=1}^n w_k \Ind{\sum_{i=1}^n w_i \Ind{t_i \geq t_k } \leq \beta} \leq \beta.\]
-\label{lemma:harrison_2012}
-\end{lemma}
-\begin{proof}
-    Define \((\hat{F}^w_t)_- (x) \coloneqq \lim_{y \uparrow x} \hat{F}^w_t(y) = \sum_{k=1}^n w_k \Ind{x > t_k} \). Then we have that \begin{align*}
-        \sum_{k=1}^n w_k \Ind{\sum_{i=1}^n w_i \Ind{t_i \geq t_k } \leq \beta} &= \sum_{k=1}^n w_k \Ind{(\hat{F}^w_t)_-(t_k) \geq 1-\beta} \\
-        &= \sum_{k=1}^n w_k \Ind{t_k > \hat{Q}^w_t(1-\beta)} \\
-        &= 1 - \hat{F}^w_t(\hat{Q}^w_t(1-\beta)) \leq \beta.
-    \end{align*}
-\end{proof}
+In this subsection, we present the \textit{nonexchangeable conformal prediction} (NexCP) method developed in \cite{barber2023conformalbeyondexch}. The key theoretical contribution of \cite{barber2023conformalbeyondexch}, presented in \cref{thm:nexCP_coverage}, is the development of a weighted conformal prediction procedure for which a coverage guarantee can be derived when the data is not assumed to be exchangeable and the conformity score is not assumed to be symmetric. \vskip5pt
 
 \noindent
-Before we present the main theorem of this subsection, we introduce the following notation. Given data points \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\), \(y \in \mathcal{Y}\) and \(k \in [n+1]\), we define \[D = ((X_i, Y_i))_{i=1}^{n+1}, \quad D^{y} = ((X_i, Y_i)_{i=1}^n, (X_{n+1}, y)), \quad \quad D^{(k)} = \pi_k(D), \quad \mathrm{and} \quad D^{y, (k)} = \pi_k(D^{y}). \] where \(\pi_k \in S_{n+1}\) is the transposition exchanging \(k\) and \(n+1\). Given a conformity score \(s\), we additionally define \[S = (s((X_i, Y_i); D))_{i=1}^{n+1}, \quad \mathrm{and} \quad S^{(k)} = ( s(( X_{\pi_k(i)}, Y_{\pi_k(i)} ); D^{(k)}) )_{i=1}^{n+1}.\] We also define \[S_i^{y, (k)} = \begin{cases}
+Before we present the main theorem of this subsection, we introduce the required notation. Given data points \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\), \(y \in \mathcal{Y}\) and \(k \in [n+1]\), we define \[D = ((X_i, Y_i))_{i=1}^{n+1}, \quad D^{y} = ((X_i, Y_i)_{i=1}^n, (X_{n+1}, y)), \quad \quad D^{(k)} = \pi_k(D), \quad \mathrm{and} \quad D^{y, (k)} = \pi_k(D^{y}). \] where \(\pi_k \in S_{n+1}\) is the transposition exchanging \(k\) and \(n+1\). \vskip5pt
+
+\noindent
+Let \(s\) be  conformity score. As mentioned above, we will not assume that \(s\) is symmetric. This means that the model fitting procedure within the conformity score may take the order of the data points into account.  We define \[S = (s((X_i, Y_i); D))_{i=1}^{n+1}, \quad \mathrm{and} \quad S^{(k)} = ( s(( X_{\pi_k(i)}, Y_{\pi_k(i)} ); D^{(k)}) )_{i=1}^{n+1}.\] We also define \[S_i^{y, (k)} = \begin{cases}
     s(( X_i, Y_i ); D^{y, (k)}) \quad &\mathrm{if} \ i = 1, \ldots, n \\
     s(( X_{n+1}, y ); D^{y, (k)}) \quad &\mathrm{if} \ i = n+1,
 \end{cases} \quad \mathrm{and} \quad S^{y, (k)} = (S_i^{y,(k)})_{i=1}^{n+1}.\]
 
 \noindent
-We fix \textit{weights} \(w_1, \ldots, w_{n} \in [0, \infty)\) and correspondingly define \begin{equation}
+The NexCP method assigns \textit{weights} \(w_1, \ldots, w_{n} \in [0, \infty)\) to the data points \((X_1, Y_1), \ldots, (X_n, Y_n)\), respectively. The weights are fixed, non-negative real numbers and the corresponding normalised weights are defined by \begin{equation}
     \tilde{w_i} = \frac{w_i}{1+\sum_{j=1}^n w_j} \quad \mathrm{and} \quad \tilde{w}_{n+1} = \frac{1}{1+\sum_{j=1}^n w_j}
 \label{eqn:nexCP_weights_defn}
 \end{equation} for all \(i \in [n]\). \vskip5pt
@@ -629,14 +686,25 @@ We fix \textit{weights} \(w_1, \ldots, w_{n} \in [0, \infty)\) and corresponding
 We define \(K\) to be random variable taking values in \([n+1]\) such that \begin{equation}
     \Prob{K = k} = \tilde{w}_k
 \label{eqn:nexCP_K_defn}
-\end{equation} for all \(k \in [n+1]\), and we take \(K\) and \(D\) to be independent.
+\end{equation} for all \(k \in [n+1]\), and we take \(K\) and \(D\) to be independent. \vskip5pt
+
+\noindent
+Lastly, we recall the definition of the total variation distance.
+
+\begin{definition}
+    Let \(U\) and \(V\) be random variables defined on the probability space \((\Omega, \mathcal{F}, \mathbb{P})\). The \textit{total variation distance} between \(U\) and \(V\) is defined as \[\R{d_{TV}}(U,V) = \sup_{A \in \mathcal{F}} | \Prob{U \in A} - \Prob{V \in A}| .\] 
+\label{defn:TV_distance}
+\end{definition}
+
+\noindent
+We now prove the main theorem of this subsection which provides the predicition set and coverage guarantee for the NexCP method.
 
 \begin{theorem}
-    Let \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) be a sequence of tagged data points and \(s\) be a conformity score. Let \(w_1, \ldots, w_{n+1} \in [0, \infty)\) be fixed real numbers and define \(\tilde{w}_i\) according to \eqref{eqn:nexCP_weights_defn} for all \(i \in [n+1]\). Let \(K\) be a random variable as in \eqref{eqn:nexCP_K_defn} that is independent of \(D\). Define the prediction set \begin{equation}
+    Let \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) be a sequence of data points and \(s\) be a conformity score. Let \(w_1, \ldots, w_{n+1} \in [0, \infty)\) be fixed real numbers and define \(\tilde{w}_i\) according to \eqref{eqn:nexCP_weights_defn} for all \(i \in [n+1]\). Let \(K\) be a random variable as in \eqref{eqn:nexCP_K_defn} that is independent of \(D\). Define the prediction set \begin{equation}
         C(X_{n+1}) = \left\{ y \in \mathcal{Y} : \ S_{n+1}^{y, (K)} \leq \hat{Q}_{S^{y, (K)}}^{\tilde{w}}(1-\alpha)  \right\}.
     \label{eqn:nexCP_prediction_set}
     \end{equation} Then we have that \begin{equation}
-        \Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha - \sum_{k=1}^n \R{d_{TV}}(S, S^{(k)}).
+        \Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha - \sum_{k=1}^n \tilde{w}_k \R{d_{TV}}(S, S^{(k)}).
     \end{equation}
 \label{thm:nexCP_coverage}
 \end{theorem}
@@ -646,35 +714,35 @@ We define \(K\) to be random variable taking values in \([n+1]\) such that \begi
         &= \sum_{\substack{i = 1 \\ i \neq K}}^{n} \tilde{w}_i \Ind{x \geq S_i^{Y_{n+1}, (K)}} + \tilde{w}_K \Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} + \tilde{w}_{n+1} \Ind{x \geq S_K^{Y_{n+1}, (K)}} \\
         &= \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x) + \tilde{w}_K \Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} + \tilde{w}_{n+1} \Ind{x \geq S_K^{Y_{n+1}, (K)}} \\
         & \hspace{4.8cm} -  \tilde{w}_K \Ind{x \geq S_{K}^{Y_{n+1}, (K)}} - \tilde{w}_{n+1} \Ind{x \geq \infty} \\
-        &= \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x) + \tilde{w}_K \left (\Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} - \Ind{x \geq \infty} \right) \\
+        &= \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x) + \tilde{w}_K \left( \Ind{x \geq S_{n+1}^{Y_{n+1}, (K)}} - \Ind{x \geq \infty} \right) \\
         & \hspace{4.8cm} + \left( \tilde{w}_{n+1} - \tilde{w}_K\right) \left(\Ind{x \geq S_{K}^{Y_{n+1}, (K)}} - \Ind{x \geq \infty} \right) \\
         & \geq \hat{F}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(x).
     \end{align*}
     Therefore, we have that \[\hat{F}^{\tilde{w}}_{S^{(K)}}\left( \hat{Q}^{\tilde{w}}_{\left( S_1^{Y_{n+1}, (K)}, \ldots, S_n^{Y_{n+1}, (K)}, \infty  \right)}(1-\alpha) \right) \geq 1-\alpha,\] by \cref{lemma:cdfquantile} which shows the claim above. \vskip5pt
 
     \noindent
-    So far, we have shown that \[Y_{n+1} \not \in C(X_{n+1}) \implies S_{n+1}^{Y_{n+1}, (K)} >\hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha).\] Noting that \(S_{n+1}^{Y_{n+1}, (K)} = S_K^{(K)}\), this implies that \[\Prob{Y_{n+1} \in C(X_{n+1}) } \geq 1 - \Prob{ S_K^{(K)} > \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha) }. \]
+    So far, we have shown that \[Y_{n+1} \not \in C(X_{n+1}) \implies S_{n+1}^{Y_{n+1}, (K)} >\hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha).\] Noting that \(S_{n+1}^{Y_{n+1}, (K)} = S_K^{(K)}\), this implies that \[\Prob{Y_{n+1} \in C(X_{n+1}) } \geq \Prob{ S_K^{(K)} \leq \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha) }. \]
     \noindent
-    For \(r \in \mathbb{R}^{n+1}\), define \[\mathcal{S}(r) = \left\{ i \in [n+1]: \ r_i > \hat{Q}^{\tilde{w}}_r(1-\alpha) \right\}.\] Note that for any \(r \in \mathbb{R}^{n+1}\), \begin{align*}
-        \sum_{i \in \mathcal{S}(r)} \tilde{w}_i &= \sum_{i=1}^{n+1} \tilde{w}_i \Ind{r_i > \hat{Q}^{\tilde{w}}_r(1-\alpha)} \\
-        &= \sum_{i=1}^{n+1} \tilde{w}_i \Ind{\sum_{j=1}^{n+1} \tilde{w_j} \Ind{r_j < r_i} \geq 1-\alpha} \\
-        &= \sum_{i=1}^{n+1} \tilde{w}_i \Ind{\sum_{j=1}^{n+1} \tilde{w_j} \Ind{r_i \leq r_j} \leq \alpha} \leq \alpha
-    \end{align*} by \cref{lemma:harrison_2012}. \vskip5pt
-    
-    \noindent
-    Thus, we have that \begin{align*}
-        \Prob{ S_K^{(K)} > \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha) } &= \Prob{K \in \mathcal{S}(S^{(K)})} \\
-        &= \sum_{k=1}^{n+1} \tilde{w}_k \Prob{k \in \mathcal{S}(S^{(k)})} \\
-        &= \sum_{k=1}^{n+1} \tilde{w}_k \Prob{k \in \mathcal{S}(S)} + \sum_{k=1}^{n+1} \tilde{w}_k \left[\Prob{k \in \mathcal{S}(S^{(k)})} - \Prob{k \in \mathcal{S}(S)} \right] \\
-        &= \Exp{\sum_{k \in \mathcal{S}(S)} \tilde{w}_k }{[}{]} + \sum_{k=1}^{n} \tilde{w}_k \left[\Prob{k \in \mathcal{S}(S^{(k)})} - \Prob{k \in \mathcal{S}(S)} \right] \\
-        &\leq \alpha + \sum_{k=1}^n \tilde{w}_k \, \R{d_{TV}}(S, S^{(k)}),
-    \end{align*} where the second equality follows from the independence of \(K\) and the data, we use the result above and we note that \(S^{(n+1)} = S\). Overall, we deduce that \[\Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha - \sum_{k=1}^n \R{d_{TV}}(S, S^{(k)}).\]
-
+    Thus, we have that
+    \begin{align*}
+        \Prob{Y_{n+1} \in C(X_{n+1})} &\geq \Prob{ S_K^{(K)} \leq \hat{Q}^{\tilde{w}}_{S^{(K)}}(1-\alpha) } \\
+        &= \sum_{k=1}^{n+1} \Prob{S_k^{(k)} \leq \hat{Q}^{\tilde{w}}_{S^{(k)}}(1-\alpha), \, K=k} \\
+        &= \sum_{k=1}^{n+1} \tilde{w}_k \Prob{S_k^{(k)} \leq \hat{Q}^{\tilde{w}}_{S^{(k)}}(1-\alpha)} \\
+        &= \sum_{k=1}^{n+1} \tilde{w}_k \Prob{S_k \leq \hat{Q}^{\tilde{w}}_{S}(1-\alpha)} \\
+        & \hspace{2.6cm} + \sum_{k=1}^{n+1} \tilde{w}_k \left[ \Prob{S_k^{(k)} \leq \hat{Q}^{\tilde{w}}_{S^{(k)}}(1-\alpha)} - \Prob{S_k \leq \hat{Q}^{\tilde{w}}_{S}(1-\alpha)} \right] \\
+        &\geq \Exp{\sum_{k=1}^{n+1} \tilde{w}_k \Ind{S_k \leq \hat{Q}^{\tilde{w}}_{S}(1-\alpha)}}{[}{]} - \sum_{k=1}^{n+1} \tilde{w}_k \, \R{d_{TV}}(S, S^{(k)}) \\
+        &= \Exp{\hat{F}^{\tilde{w}}_S(\hat{Q}^{\tilde{w}}_S (1-\alpha))}{[}{]} - \sum_{k=1}^{n+1} \tilde{w}_k \, \R{d_{TV}}(S, S^{(k)}) \\
+        &\geq 1-\alpha - \sum_{k=1}^{n+1} \tilde{w}_k \, \R{d_{TV}}(S, S^{(k)}),
+    \end{align*}
+    where the third line follows from the independence of \(K\) and \(D\), the fifth line follows from \cref{defn:TV_distance} and the final inequality follows from \cref{lemma:cdfquantile}.
 \end{proof}
+
+\noindent
+The corresponding algorithm, referred to as \textit{nonexchangeable full conformal predicition} is stated below.
 
 \begin{algorithm}[H]
     \label{alg:nexCP}
-    \caption{NexCP algorithm}
+    \caption{Nonexchangeable full conformal prediction algorithm}
     \begin{algorithmic}
         \Require Calibration \(((X_i, Y_i))_{i=1}^n\); test predictor \(X_{n+1}\); miscoverage level \(\alpha \in (0,1)\), conformity score \(\hat{s}\). 
         \State Initialise \(C \gets \emptyset\)
@@ -691,8 +759,137 @@ We define \(K\) to be random variable taking values in \([n+1]\) such that \begi
     \end{algorithmic}
 \end{algorithm}
 
-\subsection{Covariate Shift}
+\noindent
+Before discussing the implications of \cref{thm:nexCP_coverage}, we note that, in the same way that split conformal prediction is a special case of full conformal prediction in \cref{sec:foundations_of_CP}, we may derive a corresponding result for NexCP, referred to as \textit{nonexchangeable split conformal predicition}. We use the notation from \cref{subsec:splitconformal}, denoting \(\hat{s}:\mathcal{X} \to \mathcal{Y}\) to be the conformity score and \(D_\R{tr}\) the proper training set. We also write \(\hat{S}_i = \hat{s}(X_i, Y_i)\) for all \(i \in [n]\) and \(\hat{S}_{n+1}^y = \hat{s}(X_{n+1}, y)\).
 
+\begin{corollary}
+    Suppose \((X_1, Y_1), \ldots, (X_n, Y_n), (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) are data points. Define the prediction set \begin{equation}
+        C(X_{n+1}) = \left\{ y \in \mathcal{Y}: \  \hat{S}_{n+1}^y \leq \hat{Q}^w_{(\hat{S}_1, \ldots, \hat{S}_n, \infty)}(1-\alpha)  \right\}.
+    \label{eqn:nexCP_split_prediction_set}
+    \end{equation} Then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha - \sum_{k=1}^n \tilde{w}_k \R{d_{TV}}(S, S^{(k)}).\]
+\label{corr:nexCP_split}
+\end{corollary}
+\begin{proof}
+    This follows from \cref{thm:nexCP_coverage} and \cref{lemma:quantile_lemma} in exactly the same way as in the proof of \cref{thm:splitconformal_coverage} by taking \(s((x,y); \tilde{D}) = \hat{s}(x,y)\) for \((x,y) \in \mathcal{Z}\) and \(\tilde{D} = \cup_{j \geq 1} \mathcal{Z}^j.\)
+\end{proof}
+
+\noindent
+We now interpret the result in \cref{thm:nexCP_coverage}, following the points made in \cite{barber2023conformalbeyondexch}. As mentioned at the beginning of this subsection, the coverage guarantee in \cref{thm:nexCP_coverage} makes no assumption on the distribution of the data or on the conformity score. The quantity \begin{equation}
+    \sum_{k=1}^{n} \tilde{w}_k \R{d_{TV}}(S, S^{(k)}).
+\label{eqn:nexCP_loss_coverage}
+\end{equation} may be interpreted as the loss in coverage that occurs due to not assuming exchangeability or that the conformity score is symmetric. We highlight some important special cases of \cref{thm:nexCP_coverage}.
+
+\begin{corollary}
+    Let \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) and \(s\) be a symmetric conformity score. Let \(C(X_{n+1})\) be the prediction set \eqref{eqn:fullconformal_prediction_set}. Then we have that \[
+        \Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha - \frac{1}{n+1} \sum_{k=1}^{n} \R{d_{TV}}(S, S^{(k)}).
+    \]
+\label{corr:nexCP_robustness}
+\end{corollary}
+\begin{proof}
+    Since \(s\) is symmetric, we have that \(S_{i}^{y, (K)} = s((X_i, Y_i); D^{y, (K)}) = s((X_i, Y_i); D^{y}) = S_i^y\) for \(i \in [n]\) and similarly, \(S_{n+1}^{y, (K)} = S_{n+1}^y\). Moreover, if we take \(w_i = 1\) for each \(i \in [n]\), then the prediction set \eqref{eqn:nexCP_prediction_set} coincides with \eqref{eqn:fullconformal_prediction_set}, so the result follows from \cref{thm:nexCP_coverage}.
+\end{proof}
+
+\noindent
+An interpretation of \cref{corr:nexCP_robustness} is that if we apply the standard full conformal prediction algorithm \cref{alg:fullconformal} to nonexchangeable data, then \[\frac{1}{n+1} \sum_{k=1}^{n} \R{d_{TV}}(S, S^{(k)})\] is the loss in marginal coverage compared to the \(1-\alpha\) level in the exchangeable case. If we interpret the quantity in the above display as a measure of the extent to which exchangeability is violated, then \cref{corr:nexCP_robustness} shows that smaller the violation of exchangeability, the smaller the loss in coverage.
+
+\begin{corollary}
+    Let \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) be exchangeable and \(s\) be a conformity score. With \(\tilde{w}\) and \(K\) as in \cref{thm:nexCP_coverage}, define the prediction set \[C(X_{n+1}) = \left\{ y \in \mathcal{Y} : \ S_{n+1}^{y, (K)} \leq \hat{Q}_{S^{y, (K)}}^{\tilde{w}}(1-\alpha)  \right\}.\] Then we have that \[
+        \Prob{Y_{n+1} \in C(X_{n+1})}  \geq 1-\alpha.
+    \]
+\label{corr:nexCP_exchangeable}
+\end{corollary}
+\begin{proof}
+    If the data is exchangeable, then \(S \overset{d}{=} S^{(k)}\) for any \(k \in [n] \), so \[\sum_{k=1}^n \tilde{w_k} \R{d_{TV}}(S, S^{(k)}) = 0,\] and the result follows from \cref{thm:nexCP_coverage}.
+\end{proof}
+
+\noindent
+We see that \cref{corr:nexCP_exchangeable} is in fact a generalisation of \cref{thm:fullconformal_coverage} since it has the same assumptions and coverage guarantee as \cref{thm:fullconformal_coverage} but allows for conformity scores that are not necessarily symmetric. Therefore \cref{corr:nexCP_exchangeable} shows that in the special case that the data is exchangeable but the conformity score is not symmetric, the NexCP method may be used to recover the same \((1-\alpha)-\)level coverage guarantee as in \cref{thm:fullconformal_coverage}. \vskip5pt
+
+\noindent
+Overall, this shows that in addition to quantifying the coverage loss in the case where the data 
+
+\subsection{Distribution Shift}
+\label{subsec:dist_shift}
+
+In this subsection, we focus on a specific kind of violation of exchangeability - distribution shift. Specifically, denoting \(Z_i = (X_i, Y_i) \in \mathcal{Z}\) for \(i \in [n+1]\), we will consider the case where the calibration data satisfies \(Z_1, \ldots, Z_n \overset{\R{i.i.d.}}{\sim} P\) from a distribution \(P\) and the test point \(Z_{n+1} \sim Q\) for some other distribution \(Q\). Note that \(Z_1, \ldots, Z_{n+1}\) are not exchangeable since they are not identically distributed, so \cref{thm:fullconformal_coverage} does not apply. We discuss a conformal predicition procedure originally developed in \cite{tibshirani2019covariateshift} and \cite{ramdas2021labelshift} which enables the construction of a prediction set with at least \(1-\alpha\) coverage in the above setting. \vskip5pt
+
+\noindent
+We first introduce a notion that generalises exchangeability, referred to as \textit{weighted exchangeability} (\cite{tibshirani2019covariateshift,barber2024finetti,tang2023finiteweighted}). In what follows \(\mathcal{U}\) denotes a separable complete metric space, \(\mathcal{B}(\mathcal{U})\) denotes the Borel \(\sigma-\)algebra on \(\mathcal{U}\) and \(\Lambda\) denotes the set of measurable functions from \(\mathcal{U}\) to \((0, \infty)\).  The conditions on \(\mathcal{U}\) are required due to measure-theoretic results ensuring the existence of regular conditional distributions which we do not discuss further here ((see Appendix A.1 \cite{barber2024finetti})). 
+
+\begin{definition}[\cite{barber2024finetti,tang2023finiteweighted}]
+    \begin{enumerate}[(i)] \itemsep0em
+        \item A probability measure \(Q\) on \(\mathcal{U}^n\) is \textit{exchangeable} if for all \(A_1, \ldots, A_n \in \mathcal{B}(\mathcal{U})\), \[Q(A_1 \times \cdots \times A_n) = Q(A_{\sigma(1)} \times \cdots \times A_{\sigma(n)})\] for all \(\sigma \in S_n.\) 
+        \item Given \(\lambda = (\lambda_1, \ldots, \lambda_n) \in \Lambda^n\), a probability measure \(Q\) on \(\mathcal{U}^n\) is called \(\lambda-\)\textit{weighted exchangeable} if the measure \(\bar{Q}\) defined as \[\bar{Q}(B) = \int_{B} \frac{\R{d}Q(x_1, \ldots, x_n)}{\lambda_1(x_1) \cdots \lambda_n(x_n)}, \quad \mathrm{for} \ B \in \mathcal{B}(\mathcal{U}^n) \] is exchangeable.
+    \end{enumerate}
+\label{defn:weighted_exch}
+\end{definition}
+
+\noindent
+Note that \(U_1, \ldots, U_n\) are exchangeable according to \cref{defn:exch} if and only if \(\mathbb{P} \circ U^{-1}\) is exchangeable according to \cref{defn:weighted_exch}, where \(U = (U_1, \ldots, U_n)\). Moreover, note that \(Q\) is exchangeable if and only if \(Q\) is \(\lambda-\)weighted exchangeable for \(\lambda_1, \ldots, \lambda_n \equiv 1\). The lemma below demonstrates how the notion of weighted exchangeability applies to our setting.
+
+\begin{lemma}
+    Let \(Z_1, \ldots, Z_n \overset{\R{i.i.d}}{\sim} P \) be data points in \(\mathcal{Z}\) and suppose \(Z_{n+1} \sim Q\) is a data point in \(\mathcal{Z}\) independent of \((Z_i)_{i=1}^n\), for some distributions \(P, Q\) on \(\mathcal{Z}\) such that \(Q\) is absolutely continuous with respect to \(P\). Then the distribution of \((X_i, Y_i)_{i=1}^{n+1}\) is \(\lambda-\)weighted exchangeable, where \(\lambda = \left(1, \ldots, 1, \frac{\R{d}Q}{\R{d}P}\right)\) and \(\frac{\R{d}Q}{\R{d}P}\) is the Radon-Nikodym derivative.
+\label{lemma:dist_shift_weighted_exch}
+\end{lemma}
+\begin{proof}
+    Note that \((Z_i)_{i=1}^{n+1} \sim P^{n} \times Q\). For any measurable sets \(B_1, \ldots, B_{n+1}\) and \(\sigma \in S_{n+1}\), we have that \begin{align*}
+        (\overline{P^n \times Q})(B_1 \times \cdots \times B_{n+1}) &= \int_{B_1 \times \cdots \times B_{n+1}} \frac{\R{d}(P^n \times Q)(u_1, \ldots, u_{n+1})}{\frac{\R{d}Q}{\R{d}P}(u_{n+1})} \\
+        &= P(B_1) \cdots P(B_n) \int_{B_{n+1}} \frac{1}{\frac{\R{d}Q}{\R{d}P}(u_{n+1})} \, \R{d}Q(u_{n+1}) \\
+        &= P(B_1) \cdots P(B_n) \int_{B_{n+1}} \frac{1}{\frac{\R{d}Q}{\R{d}P}(u_{n+1})} \, \frac{\R{d}Q}{\R{d}P}(u_{n+1}) \, \R{d}P(u_{n+1}) \\
+        &= P^{n+1}(B_1 \times \cdots \times B_{n+1}).
+    \end{align*}
+    Therefore, we have that \begin{align*}
+        (\overline{P^n \times Q})(B_1 \times \cdots \times B_{n+1}) &= P^{n+1}(B_1 \times \cdots \times B_{n+1}) \\
+        &= P^{n+1}(B_{\sigma(1)} \times \cdots \times B_{\sigma(n+1)}) \\
+        &= (\overline{P^n \times Q})(B_1 \times \cdots \times B_{n+1}) &= P^{n+1}(B_{\sigma(1)} \times \cdots \times B_{\sigma(n+1)}),
+    \end{align*} so \(\overline{P^n \times Q}\) is exchangeable.
+\end{proof}
+
+\noindent
+We now state an important lemma on weighted exchangeability that will be used to establish the desired coverage guarantee. The interpretation of this result, as mentioned in \cite{barber2024finetti}, is that conditional on the unordered values \(\{U_1, \ldots, U_k\}\), the distribution \(U_i\) is a discrete distribution over \(\{U_1, \ldots, U_k\}\) where the probabilities may be explicity expressed in terms of \(\lambda\). The probability of taking on the value \(U_j\) is denoted by \(\left(w_{k, i}(U_1, \ldots, U_k)\right)_j\) below. The way the authors of \cite{barber2024finetti} formally express conditioning on the unordered values \(\{U_1, \ldots, U_k\}\) is by conditioning on the sub-\(\sigma-\)algebra \(\mathcal{E}_k\) of \(\mathcal{B}(\mathcal{U}^k)\) satisfying \((u_1, \ldots, u_k) \in \mathcal{E}_k \iff (u_\sigma(k), \ldots, u_\sigma(k)) \in \mathcal{E}_k\) for any \(\sigma \in S_k\). We now state the lemma but omit the proof since it consists primarily of measure-theoretic calculations regarding conditional distributions. The proof may be found in \cite{barber2024finetti}. \textcolor{red}{Add reference to say that this is same as conditioning on empirical dist + defn of empirical dist.} \vskip5pt
+
+\noindent
+
+\begin{lemma}[\cite{barber2024finetti} Proposition 7]
+    For any \(\lambda \in \Lambda^k\), any \(\lambda-\)weighted exchangeable \(Q\) on \(\mathcal{U}^k\), and \(U \sim Q\), we have that \[U_i | \hat{P}_k \sim \tilde{P}_{k, i}, \] where \(\tilde{P}_{k, i} = \sum_{j=1}^{k} \left(w_{k, i}(U_1, \ldots, U_k)\right)_j \, \delta_{U_j}\) and \[\left(w_{k, i}(u_1, \ldots, u_k)\right)_j = \frac{ \sum_{\sigma \in S_k : \, \sigma(i) = j} \lambda_1(u_{\sigma(1)}) \cdots \lambda_k(u_{\sigma(k)})  }{\sum_{\sigma \in S_k} \lambda_1(u_{\sigma(1)}) \cdots \lambda_k(u_{\sigma(k)})}\]
+\label{lemma:weighted_exch_conditional_lemma}
+\end{lemma}
+
+\noindent
+We now apply \cref{lemma:weighted_exch_conditional_lemma} to our setting by combining it with \cref{lemma:dist_shift_weighted_exch}.
+
+\begin{lemma}[\cite{angelopoulos2024theoreticalfoundationsconformalprediction} Proposition 7.6]
+    Let \(Z_1, \ldots, Z_n \overset{\R{i.i.d}}{\sim} P \) be data points in \(\mathcal{Z}\) and suppose \(Z_{n+1} \sim Q\) is a data point in \(\mathcal{Z}\) independent of \((Z_i)_{i=1}^n\), for some distributions \(P, Q\) on \(\mathcal{Z}\) such that \(Q\) is absolutely continuous with respect to \(P\). Then \[Z_{n+1} | \hat{P}_{n+1} \sim \sum_{i=1}^{n} w_i \, \delta_{Z_i},\] where \begin{equation}
+        w_i = \frac{ \frac{\R{d}Q}{\R{d}P}(Z_i)  }{ \sum_{j=1}^{n+1}  \frac{\R{d}Q}{\R{d}P}(Z_j) }, \quad i \in [n+1].
+    \label{eqn:dist_shift_weights}
+    \end{equation}
+\label{lemma:dist_shift_empirical_dist}
+\end{lemma}
+\begin{proof}
+    By \cref{lemma:weighted_exch_conditional_lemma} we have that \[Z_{n+1} | \hat{P}_{n+1} \sim \tilde{P}_{n+1, n+1},\] where \(\tilde{P}_{n+1, n+1} = \sum_{i=1}^{k} \left(w_{n+1, n+1}(Z_1, \ldots, Z_{n+1})\right)_i \, \delta_{Z_i}\) and \begin{align*}
+        w_{n+1, n+1}(z_1, \ldots, z_{n+1})_i &= 
+        \frac{\sum_{\sigma \in S_{n+1}: \ \sigma(n+1) = i} \ \frac{\R{d}Q}{\R{d}P}(z_{\sigma(n+1)}) }{\sum_{\sigma \in S_{n+1}} \, \frac{\R{d}Q}{\R{d}P}(z_{\sigma(n+1)}) } \\
+        &= \frac{n! \, \frac{\R{d}Q}{\R{d}P}(z_i)}{\sum_{j=1}^{n+1} \sum_{\sigma \in S_{n+1}: \ \sigma(n+1)=j} \ \frac{\R{d}Q}{\R{d}P}(z_j) } \\
+        &= \frac{\frac{\R{d}Q}{\R{d}P}(z_i)}{\sum_{j=1}^{n} \frac{\R{d}Q}{\R{d}P}(z_j)}.
+    \end{align*}
+\end{proof}
+
+\noindent
+We now state the main theorem of this subsection which is the foundation of the weighted conformal prediction procedure for distribution shift.
+
+\textcolor{red}{Some notation needs to be defined below.}
+
+\begin{theorem}
+    Let \(Z_1, \ldots, Z_{n+1} \overset{\R{i.i.d}}{\sim} P \) be data points in \(\mathcal{Z}\) and suppose \(Z_{n+1} \sim Q\) is a data point in \(\mathcal{Z}\) independent of \((Z_i)_{i=1}^n\), for some distributions \(P, Q\) on \(\mathcal{Z}\) such that \(Q\) is absolutely continuous with respect to \(P\). For \(y \in \mathcal{Y}\) and \(i \in [n]\), define \[w_i^y = \frac{\frac{\R{d}Q}{\R{d}P}(Z_i)}{\sum_{j=1}^n \frac{\R{d}Q}{\R{d}P}(Z_j) + \frac{\R{d}Q}{\R{d}P}(X_{n+1}, y)} \quad \R{and} \quad w_{n+1}^y = \frac{\frac{\R{d}Q}{\R{d}P}(X_{n+1}, y)}{\sum_{j=1}^{n} \frac{\R{d}Q}{\R{d}P}(Z_j) + \frac{\R{d}Q}{\R{d}P}(X_{n+1}, y)}.\] Define the prediction set \begin{equation}
+        C(X_{n+1}) = \left\{y \in \mathcal{Y} : \, S_{n+1}^y \leq \hat{Q}^{w^y}_{S^y}(1-\alpha) \right\}.
+    \label{eqn:dist_shift_prediction_set}
+    \end{equation} Then we have that \[\Prob{Y_{n+1} \in C(X_{n+1})} \geq 1-\alpha.\]
+\end{theorem}
+\begin{proof}
+    We have that \begin{align*}
+        \Prob{Y_{n+1} \in C(X_{n+1})} = \Prob{S_{n+1} \leq Q^{w^{Y_{n+1}}}_S(1-\alpha)} = \Exp{ \Prob{S_{n+1} \leq Q^{w}_S(1-\alpha) \;\middle\vert\;  \hat{P}_{n+1} }}{[}{]}, 
+    \end{align*} where \(w_i\) is as in \cref{eqn:dist_shift_weights} and we note that for all \(i \in [n+1]\), we have \(w_i^{Y_{n+1}} = w_i\). We first note that \[\sum_{i=1}^{n+1} w_i \delta_{S_i} = \frac{\sum_{i=1}^{n+1} \frac{\R{d}Q}{\R{d}P}(Z_i) \delta_{s(Z_i; D)}}{\sum_{i=1}^{n+1} \frac{\R{d}Q}{\R{d}P}(Z_i)}\] is invariant under permutations of \((Z_1, \ldots, Z_{n+1})\) since \(s\) is symmetric. Therefore, \(\hat{Q}^w_S (1-\alpha)\) is a function of \(\hat{P}_{n+1}\). Moreover, \cref{lemma:dist_shift_empirical_dist} and the symmetry of \(s\) imply that \[S_{n+1} \; | \; \hat{P}_{n+1} \sim \sum_{i=1}^{n+1} w_i \delta_{S_i}.\] Therefore, we have that \[\Prob{S_{n+1} \leq Q^{w}_S(1-\alpha) \;\middle\vert\;  \hat{P}_{n+1} } = \hat{F}^w_S(\hat{Q}^w_S(1-\alpha)) \geq 1-\alpha\] by \cref{lemma:cdfquantile}. The result follows upon taking expectations.
+\end{proof}
 
 %This is how you can start a new page
 \vfill \eject
