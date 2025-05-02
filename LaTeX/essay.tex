@@ -1074,9 +1074,14 @@ We now show that split conformal prediction is a special case of conformal risk 
 \end{align*} as desired. \vskip5pt
 
 \noindent
-Overall, we see that the coverage guarantee provided by split conformal prediction is a special case of the much wider class of guarantees provided by conformal risk control, which control the expectation of any bounded, decreasing loss function.
+Overall, we see that the coverage guarantee provided by split conformal prediction is a special case of the much wider class of guarantees provided by conformal risk control, which control the expectation of any bounded, decreasing loss function. \vskip5pt
 
-\vfill \eject
+\noindent
+To conclude this section, we remark that it is possible to combine conformal risk control with the methods from \cref{subsec:nex_CP} and \cref{subsec:dist_shift} to extend its guarantees beyond the exchangeable setting. The extension to the distribution shift setting is discussed in \cite{angelopoulos2024riskcontrol} (Proposition 3). Finally, we state a result below relating conformal risk control with the NexCP method; note that we use the same notation as in \cref{subsec:nex_CP}. We omit the proof of this result, but we note that it combines the main ideas in the proofs of \cref{thm:crc_guarantee} and \cref{thm:nexCP_coverage} and can be found in \cite{farinhas2024nonexchangeable}.
+
+\begin{theorem}[\cite{farinhas2024nonexchangeable} Theorem 1]
+    Suppose \((X_1, Y_1), \ldots, (X_{n+1}, Y_{n+1}) \in \mathcal{Z}\) and that the prediction sets \(C_\lambda(x)\) and the map \(\lambda \mapsto \ell(y, C_\lambda(x))\) satisfy the same assumptions as in \cref{thm:crc_guarantee}. Suppose that \(A \leq \ell(y, C_\lambda(x)) \leq B\) for some constants \(A, B\) and any \(\lambda\) and \((x,y).\) Given fixed weights \(w_1, \ldots, w_n \geq 0\), define \(\tilde{w}_i\) for \(i \in [n+1]\) as in \eqref{eqn:nexCP_weights_defn}. Define the weighted empirical risk \[\hat{R}_n(\lambda) = \frac{\sum_{i=1}^{n} w_i \ell(Y_i, C_\lambda(X_i))}{\sum_{i=1}^{n} w_i}\] and define \[\hat{\lambda} = \inf \left\{ \lambda \in \Lambda : \, \hat{R}_n(\lambda) \leq \alpha - \frac{B - \alpha}{\sum_{i=1}^{n} w_i}. \right\}\] Then we have that for any \(\alpha \in [A,B]\), \[\Exp{\ell(Y_{n+1}, C_{\hat{\lambda}}(X_{n+1}))}{[}{]} \leq \alpha + (B-A)\sum_{k=1}^{n} \tilde{w}_k \, \R{d_{TV}}(D, D^{(k)}).\]
+\end{theorem}
 
 \section{Conclusion}
 
